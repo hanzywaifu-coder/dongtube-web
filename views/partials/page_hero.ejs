@@ -1,0 +1,14 @@
+<%
+
+  var __t = (typeof heroTitle !== 'undefined') ? heroTitle : '';
+  var __s = (typeof heroSubtitle !== 'undefined') ? heroSubtitle : '';
+  var __ic = (typeof heroIcon !== 'undefined') ? heroIcon : 'fa-bolt';
+%>
+<div class="reveal relative overflow-hidden rounded-[26px] mb-7 shadow-soft-lg" style="background:var(--nav-grad);">
+  <div class="absolute inset-0 opacity-25 pointer-events-none" style="background-image:radial-gradient(circle at 100% 0%,#fff 0%,transparent 45%);"></div>
+  <div class="relative z-10 px-5 sm:px-7 py-6 sm:py-8">
+    <span class="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-white/15 backdrop-blur-md ring-1 ring-white/20 text-white mb-3"><i class="fas <%= __ic%> text-sm"></i></span>
+    <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white leading-tight"><%= __t%></h1>
+    <% if (__s) {%><p class="text-[12px] sm:text-[13px] font-medium text-white/75 mt-1.5"><%= __s%></p><% }%>
+  </div>
+</div>

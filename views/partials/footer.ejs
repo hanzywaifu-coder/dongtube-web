@@ -1,0 +1,54 @@
+<% if (typeof hideFooter === 'undefined' || !hideFooter) { %>
+</main>
+<footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-white/10">
+  <div class="max-w-6xl mx-auto px-6 py-12">
+    <div class="grid gap-x-8 gap-y-2 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+      <div class="sm:col-span-2 lg:col-span-1 lg:pr-8 mb-4 lg:mb-0">
+        <a href="/" class="flex items-center gap-2.5 min-h-[44px] font-bold ink">
+          <% if (settings.logoUrl) { %>
+            <img src="<%= settings.logoUrl %>" alt="<%= settings.name %>" loading="lazy" decoding="async" class="h-7 w-auto max-w-[120px] object-contain">
+          <% } else { %>
+            <img src="/img/logo.jpg" alt="" loading="lazy" width="28" height="28" class="w-7 h-7 rounded-[8px] object-cover">
+          <% } %>
+          <%= settings.name %>
+        </a>
+        <p class="text-[13px] leading-relaxed text-slate-600 dark:text-slate-400 max-w-sm"><%= settings.description %></p>
+      </div>
+      <nav aria-label="Layanan">
+        <h3 class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Layanan</h3>
+        <ul class="text-[13px] font-medium text-slate-600 dark:text-slate-400">
+          <li><a href="/otp" class="inline-flex items-center min-h-[44px] hover:text-finance-blue transition-colors">Beli Nomor OTP</a></li>
+          <li><a href="/otp/orders" class="inline-flex items-center min-h-[44px] hover:text-finance-blue transition-colors">Riwayat Pesanan</a></li>
+          <li><a href="/deposit" class="inline-flex items-center min-h-[44px] hover:text-finance-blue transition-colors">Isi Saldo</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Akun">
+        <h3 class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Akun</h3>
+        <ul class="text-[13px] font-medium text-slate-600 dark:text-slate-400">
+          <li><a href="/login" class="inline-flex items-center min-h-[44px] hover:text-finance-blue transition-colors">Masuk</a></li>
+          <li><a href="/register" class="inline-flex items-center min-h-[44px] hover:text-finance-blue transition-colors">Daftar</a></li>
+          <li><a href="/otp" class="inline-flex items-center min-h-[44px] hover:text-finance-blue transition-colors">Dashboard</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Perusahaan">
+        <h3 class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Perusahaan</h3>
+        <ul class="text-[13px] font-medium text-slate-600 dark:text-slate-400">
+          <li><a href="/" class="inline-flex items-center min-h-[44px] hover:text-finance-blue transition-colors">Tentang</a></li>
+          <li><a href="/register" class="inline-flex items-center min-h-[44px] hover:text-finance-blue transition-colors">Mulai Sekarang</a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="mt-8 pt-5 border-t border-slate-200 dark:border-white/10">
+      <p class="text-[12px] text-slate-600 dark:text-slate-400">&copy; <%= new Date().getFullYear() %> <%= settings.name %>. Hak cipta dilindungi undang-undang.</p>
+    </div>
+  </div>
+</footer>
+<% } %>
+<% if (typeof hideBottomNav === 'undefined' || !hideBottomNav) { %>
+<%- include('bottom_nav') %>
+<% } %>
+<div id="toastContainer"></div>
+<script>function showToast(msg, type = "info") { const container = document.getElementById("toastContainer"); const toast = document.createElement("div"); let themeClasses = type === "success" ? "bg-green-100 border-green-400 text-green-800" : type === "error" ? "bg-red-100 border-red-400 text-red-800" : "bg-gray-200 border-gray-300 text-gray-900"; toast.className = `fixed top-[80px] left-1/2 w-[90%] max-w-[400px] border px-4 py-3 rounded-lg flex items-center gap-2 z-[1000] shadow-sm transform -translate-x-1/2 -translate-y-[150px] opacity-0 transition-all duration-500 font-medium text-xs ${themeClasses}`; const iconClass = type === "success" ? "fa-check-circle" : type === "error" ? "fa-exclamation-circle" : "fa-info-circle"; toast.innerHTML = `<i class="fas ${iconClass} text-xl shrink-0 mt-0.5"></i><span class="text-xs font-medium leading-relaxed">${msg}</span>`; container.appendChild(toast); setTimeout(() => { toast.classList.remove("-translate-y-[150px]", "opacity-0"); toast.classList.add("translate-y-0", "opacity-100"); }, 10); setTimeout(() => { toast.classList.remove("translate-y-0", "opacity-100"); toast.classList.add("-translate-y-[150px]", "opacity-0"); setTimeout(() => toast.remove(), 500); }, 5500); }</script>
+<script>(function () { function bind() { const els = document.querySelectorAll(".reveal:not(.in)"); if (!("IntersectionObserver" in window) || !els.length) { els.forEach(e => e.classList.add("in")); return; } const io = new IntersectionObserver(entries => entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add("in"); io.unobserve(entry.target); } }), { threshold: .08, rootMargin: "0px 0px -40px 0px" }); els.forEach((e, i) => { e.style.transitionDelay = Math.min(i * 40, 160) + "ms"; io.observe(e); }); } if (document.readyState !== "loading") bind(); else document.addEventListener("DOMContentLoaded", bind); })();</script>
+</body>
+</html>

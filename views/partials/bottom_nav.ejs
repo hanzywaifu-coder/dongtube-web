@@ -1,0 +1,97 @@
+<%# Aksi cepat di paling bawah layar, gaya tab bar TikTok:
+    halo lembut di tab aktif, ikon yang memantul saat disentuh, garis merek
+    bergradasi di atas bar, dan lencana hitungan langsung (pesanan OTP aktif
+    serta invoice isi saldo yang menunggu pembayaran) untuk pengguna login.
+    Tamu yang menekan tombol diarahkan ke /login oleh requireAuth. %>
+<nav class="bottom-nav" aria-label="Aksi cepat">
+  <div class="bottom-nav-inner">
+    <% const badge = (typeof navBadges !== 'undefined' && navBadges) ? navBadges : null; %>
+    <a href="/deposit" class="bottom-nav-link"<% if (badge && badge.pending > 0) { %> aria-label="Isi Saldo, <%= badge.pending %> invoice menunggu pembayaran"<% } %>>
+      <span class="bottom-nav-icon">
+        <i class="fa-solid fa-wallet" aria-hidden="true"></i>
+        <% if (badge && badge.pending > 0) { %><span class="bottom-nav-badge"><%= badge.pending > 99 ? '99+' : String(badge.pending) %></span><% } %>
+      </span>
+      <span class="bottom-nav-label">Isi Saldo</span>
+    </a>
+    <a href="/otp" class="bottom-nav-link"<% if (badge && badge.active > 0) { %> aria-label="OTP, <%= badge.active %> pesanan aktif"<% } %>>
+      <span class="bottom-nav-icon">
+        <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>
+        <% if (badge && badge.active > 0) { %><span class="bottom-nav-badge"><%= badge.active > 99 ? '99+' : String(badge.active) %></span><% } %>
+      </span>
+      <span class="bottom-nav-label">OTP</span>
+    </a>
+    <a href="/otp/orders" class="bottom-nav-link">
+      <span class="bottom-nav-icon">
+        <i class="fa-solid fa-receipt" aria-hidden="true"></i>
+      </span>
+      <span class="bottom-nav-label">Riwayat</span>
+    </a>
+    <a href="/profile" class="bottom-nav-link">
+      <span class="bottom-nav-icon">
+        <i class="fa-solid fa-user" aria-hidden="true"></i>
+      </span>
+      <span class="bottom-nav-label">Profil</span>
+    </a>
+  </div>
+</nav>
+<style>
+  .bottom-nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 41;
+    background: var(--surface);
+    box-shadow: 0 -10px 30px -18px rgba(16, 24, 40, 0.35);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  /* Garis atas bergradasi merek, pengganti border datar. */
+  .bottom-nav::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(79, 141, 232, 0.65) 50%, transparent 100%);
+  }
+  .bottom-nav-inner {
+    max-width: 72rem; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 0 clamp(0.5rem, 3vw, 1.5rem);
+  }
+  .bottom-nav .bottom-nav-link {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; min-height: 58px; padding: 8px 2px 6px;
+    color: var(--text-3); font-size: 12px; font-weight: 600;
+    text-decoration: none; transition: color .18s ease;
+  }
+  .bottom-nav-icon {
+    display: flex; align-items: center; justify-content: center;
+    width: 40px; height: 26px; border-radius: 13px;
+    position: relative; transition: background-color .18s ease;
+  }
+  .bottom-nav-icon i {
+    font-size: 19px; line-height: 1;
+    transition: transform .22s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  /* Tab aktif: halo lembut, ikon membesar, label tebal biru merek. */
+  .bottom-nav .bottom-nav-link.is-active { color: #2f63b8; font-weight: 700; }
+  .bottom-nav .bottom-nav-link.is-active .bottom-nav-icon { background-color: var(--brand-subtle); }
+  .bottom-nav .bottom-nav-link.is-active .bottom-nav-icon i { transform: scale(1.12); }
+  .dark .bottom-nav .bottom-nav-link.is-active { color: var(--brand); }
+  /* Umpan balik sentuhan: tekan = memantul mengecil, lepas = kembali. */
+  .bottom-nav .bottom-nav-link:hover .bottom-nav-icon i { transform: scale(1.08); }
+  .bottom-nav .bottom-nav-link:active .bottom-nav-icon i { transform: scale(0.85); transition-duration: .09s; }
+  /* Lencana hitungan langsung, angka >99 dipendekkan. */
+  .bottom-nav-badge {
+    position: absolute; top: -5px; right: -9px;
+    min-width: 16px; height: 16px; padding: 0 4px;
+    border-radius: 999px; background: #c62828; color: #fff;
+    font-size: 11px; font-weight: 700; line-height: 16px; text-align: center;
+    box-shadow: 0 0 0 2px var(--surface);
+  }
+  /* Ruang di bawah agar konten dan footer tidak tertutup bar tetap. */
+  body { padding-bottom: calc(70px + env(safe-area-inset-bottom)) !important; }
+</style>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var path = location.pathname;
+    document.querySelectorAll('.bottom-nav .bottom-nav-link').forEach(function (a) {
+      var href = a.getAttribute('href');
+      if (path === href || (href !== '/otp' && path.indexOf(href + '/') === 0)) a.classList.add('is-active');
+    });
+  });
+</script>

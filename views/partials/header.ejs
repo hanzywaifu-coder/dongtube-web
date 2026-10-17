@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1c84ee">
+  <link rel="icon" href="/img/logo.jpg" type="image/jpeg">
+  <%- include('tokens') %>
+  <title><%= typeof title !== 'undefined' && title ? title + ' - ' + settings.name : settings.name %></title>
+  <meta name="description" content="<%= settings.description %>">
+  <meta name="robots" content="index, follow">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="<%= settings.name %>">
+  <meta property="og:title" content="<%= typeof title !== 'undefined' && title ? title + ' - ' + settings.name : settings.name %>">
+  <meta property="og:description" content="<%= settings.description %>">
+</head>
+<body>
+
+<nav class="fixed-navbar">
+  <div class="navbar-container">
+    <a href="/" class="flex items-center min-w-0 max-w-full overflow-hidden text-lg font-semibold text-white tracking-tight">
+      <% if (settings.logoUrl) { %>
+        <img src="<%= settings.logoUrl %>" alt="<%= settings.name %>" decoding="async" class="h-9 sm:h-11 w-auto max-w-[180px] object-contain">
+      <% } else { %>
+        <span class="flex items-center gap-3 min-w-0 max-w-full">
+          <img src="/img/logo.jpg" alt="" width="40" height="40" class="w-10 h-10 rounded-xl object-cover ring-2 ring-white/40 shrink-0">
+          <span class="truncate"><%= settings.name %></span>
+        </span>
+      <% } %>
+    </a>
+
+    <% if (user) { %>
+    <div id="navigation-links" class="desktop-menu items-center gap-1.5 text-[13px] font-semibold">
+      <a href="/otp" class="flex items-center gap-2 px-3 py-2 text-white/90 hover:text-white hover:bg-white/15 rounded-[12px] transition-all"><i class="fa-solid fa-mobile-screen-button"></i> Beli OTP</a>
+      <a href="/otp/orders" class="flex items-center gap-2 px-3 py-2 text-white/90 hover:text-white hover:bg-white/15 rounded-[12px] transition-all"><i class="fa-solid fa-receipt"></i> Riwayat</a>
+      <a href="/deposit" class="flex items-center gap-2 px-3 py-2 text-white/90 hover:text-white hover:bg-white/15 rounded-[12px] transition-all"><i class="fa-solid fa-wallet"></i> Isi Saldo</a>
+      <a href="/profile" class="flex items-center gap-2 px-3 py-2 text-white/90 hover:text-white hover:bg-white/15 rounded-[12px] transition-all"><i class="fa-solid fa-user"></i> Profil</a>
+      <% if (user.role === 'admin') { %>
+        <a href="/admin" class="flex items-center gap-2 px-3 py-2 text-white/90 hover:text-white hover:bg-white/15 rounded-[12px] transition-all"><i class="fa-solid fa-gauge-high"></i> Admin</a>
+      <% } %>
+      <div class="h-6 w-px bg-white/30 mx-2" aria-hidden="true"></div>
+      <a href="/logout" class="flex items-center gap-2 px-4 py-2 min-h-[44px] text-[13px] font-bold text-finance-blue bg-white hover:bg-slate-50 rounded-[12px] transition-all">
+        <i class="fa-solid fa-right-from-bracket"></i> Keluar
+      </a>
+    </div>
+    <% } else { %>
+    <div id="navigation-links" class="desktop-menu items-center gap-1.5 text-[13px] font-semibold">
+      <a href="/login" class="flex items-center gap-2 px-3.5 py-2 min-h-[44px] text-white/95 hover:text-white hover:bg-white/15 rounded-[12px] transition-all">Masuk</a>
+      <a href="/register" class="flex items-center gap-2 px-4 py-2 min-h-[44px] text-[13px] font-bold text-finance-blue bg-white hover:bg-slate-50 rounded-[12px] transition-all">
+        <i class="fa-solid fa-user-plus"></i> Daftar
+      </a>
+    </div>
+    <% } %>
+
+    <div class="flex gap-2 items-center lg:hidden">
+      <div class="hamburger-menu-wrapper">
+        <input type="checkbox" class="hamburger-checkbox" id="hamburger-toggle">
+        <label for="hamburger-toggle" class="hamburger-button" aria-label="Buka menu">
+          <span></span><span></span><span></span>
+        </label>
+
+        <div id="mobile-navigation-links" class="mobile-menu">
+          <div class="px-6 py-4 flex items-center gap-3">
+            <img src="/img/logo.jpg" alt="" width="40" height="40" class="w-10 h-10 rounded-[14px] object-cover shrink-0">
+            <p class="text-[15px] font-bold text-slate-800 tracking-tight truncate"><%= settings.name %></p>
+          </div>
+
+          <div class="mobile-menu-divider"></div>
+
+          <div class="mobile-menu-items text-[13px] font-semibold flex flex-col gap-1.5 pt-2">
+            <% if (user) { %>
+              <p class="px-4 pb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400"><%= user.name || user.email %></p>
+              <a href="/otp" class="flex items-center gap-3 px-4 py-3.5 text-slate-700 hover:text-finance-blue hover:bg-pastel-blue rounded-[14px] transition-colors"><i class="fa-solid fa-mobile-screen-button w-5 text-center"></i> Beli OTP</a>
+              <a href="/otp/orders" class="flex items-center gap-3 px-4 py-3.5 text-slate-700 hover:text-finance-blue hover:bg-pastel-blue rounded-[14px] transition-colors"><i class="fa-solid fa-receipt w-5 text-center"></i> Riwayat Pesanan</a>
+              <a href="/deposit" class="flex items-center gap-3 px-4 py-3.5 text-slate-700 hover:text-finance-blue hover:bg-pastel-blue rounded-[14px] transition-colors"><i class="fa-solid fa-wallet w-5 text-center"></i> Isi Saldo</a>
+              <a href="/profile" class="flex items-center gap-3 px-4 py-3.5 text-slate-700 hover:text-finance-blue hover:bg-pastel-blue rounded-[14px] transition-colors"><i class="fa-solid fa-user w-5 text-center"></i> Profil</a>
+              <% if (user.role === 'admin') { %>
+                <a href="/admin" class="flex items-center gap-3 px-4 py-3.5 text-slate-700 hover:text-finance-blue hover:bg-pastel-blue rounded-[14px] transition-colors"><i class="fa-solid fa-gauge-high w-5 text-center"></i> Admin</a>
+              <% } %>
+              <div class="mobile-menu-divider"></div>
+              <a href="/logout" class="flex items-center gap-3 px-4 py-3.5 text-slate-700 hover:text-finance-red hover:bg-rose-50 rounded-[14px] transition-colors"><i class="fa-solid fa-right-from-bracket w-5 text-center"></i> Keluar</a>
+            <% } else { %>
+              <a href="/" class="flex items-center gap-3 px-4 py-3.5 text-slate-700 hover:text-finance-blue hover:bg-pastel-blue rounded-[14px] transition-colors"><i class="fa-solid fa-house w-5 text-center"></i> Beranda</a>
+              <a href="/login" class="flex items-center gap-3 px-4 py-3.5 text-slate-700 hover:text-finance-blue hover:bg-pastel-blue rounded-[14px] transition-colors"><i class="fa-solid fa-right-to-bracket w-5 text-center"></i> Masuk</a>
+              <a href="/register" class="flex items-center gap-3 px-4 py-3.5 text-[13px] font-bold text-white bg-finance-blue hover:bg-finance-blue-deep rounded-[14px] transition-colors">
+                <i class="fa-solid fa-user-plus w-5 text-center"></i> Daftar Gratis
+              </a>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="mobile-menu-overlay" onclick="document.getElementById('hamburger-toggle').checked = false"></div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const path = location.pathname;
+  document.querySelectorAll('#navigation-links a, #mobile-navigation-links a').forEach(link => {
+    const href = link.getAttribute('href');
+    if (!href || href === '/' || href === '/logout' || href[0] !== '/') return;
+    if (path === href || (href !== '/otp' && path.startsWith(href)) || (href === '/otp' && path === '/otp')) {
+      if (link.closest('#mobile-navigation-links')) {
+        // Drawer menu berlatar putih: gaya putih-hanya untuk navbar biru.
+        // Di sini dipakai biru merek + latar pastel supaya halaman aktif terlihat.
+        link.classList.add('text-finance-blue', 'bg-pastel-blue', 'font-bold');
+      } else {
+        link.classList.add('text-white', 'bg-white/15');
+        link.classList.remove('text-white/90');
+      }
+    }
+  });
+});
+</script>
+<main class="max-w-[480px] md:max-w-6xl mx-auto py-0">

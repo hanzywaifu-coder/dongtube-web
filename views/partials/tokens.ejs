@@ -1,0 +1,539 @@
+  <%# Token global: CDN, font, konfigurasi Tailwind, dan design system. %>
+  <%# Dipakai oleh partials/header (halaman ber-navbar) dan oleh halaman
+      mandiri seperti /chat, /pay, /pay_notfound agar semua memakai token yang sama. %>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"></noscript>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>  <script>tailwind.config={darkMode:"class",theme:{extend:{fontFamily:{"sans":["IBM Plex Sans","ui-sans-serif","system-ui","sans-serif"],"serif":["IBM Plex Sans","ui-sans-serif","system-ui","sans-serif"],"mono":["JetBrains Mono","IBM Plex Mono","ui-monospace","SFMono-Regular","Menlo","monospace"]},colors:{"finance-blue":"#4f8de8","finance-blue-deep":"#3a76cf","finance-teal":"#e2600a","finance-btn":"rgba(79, 141, 232, 0.10)","pastel-blue":"#eaf2fd","finance-green":"#0f7a52","finance-red":"#c62828"},boxShadow:{"soft":"0 1px 2px rgba(16,24,40,0.04), 0 10px 26px -10px rgba(16,24,40,0.10)","soft-lg":"0 2px 6px rgba(16,24,40,0.06), 0 22px 50px -18px rgba(16,24,40,0.18)"},transitionTimingFunction:{"spring":"cubic-bezier(0.32, 0.72, 0, 1)"}}}};</script>
+  <style>
+    /* Palet: biru muda #4F8DE8 sebagai warna merek, oranye #E2600A hanya untuk
+       elemen grafis, teks oranye #9A3412 (7.3:1). Netral abu-abu sebagai pendukung. */
+    :root {
+      --surface: #ffffff;
+      --surface-2: #eef2f7;
+      --surface-3: #e6ebf2;
+      --surface-sunken: #e9eef5;
+      --page-bg: #f8f8fa;
+      --text-1: #1c2430;
+      --text-2: #4a5a6c;
+      --text-3: #5a6a80;
+      --border-1: #e3e8ef;
+      --brand: #4f8de8;
+      --brand-hover: #3a76cf;
+      --brand-subtle: rgba(79, 141, 232, .08);
+      --brand-border: rgba(79, 141, 232, .24);
+      --accent: #e2600a;
+      --accent-ink: #9a3412;
+      --nav-grad: linear-gradient(100deg, #5f9bf2 0%, #4f8de8 45%, #3a76cf 100%);
+      --shadow-card: 0 1px 2px rgba(16,24,40,.04), 0 10px 26px -10px rgba(16,24,40,.10);
+    }
+    .dark {
+      --surface: #212932;
+      --surface-2: #29323d;
+      --surface-3: #333d48;
+      --surface-sunken: #1a212a;
+      --page-bg: #14191f;
+      --text-1: #e8eef7;
+      --text-2: #b0bfce;
+      --text-3: #9fb0c9;
+      --border-1: #333d48;
+      --brand: #a8bee8;
+      --brand-hover: #c3cfe2;
+      --brand-subtle: rgba(168, 190, 232, .12);
+      --brand-border: rgba(168, 190, 232, .28);
+      --accent: #f5813a;
+      --accent-ink: #ffc08a;
+      --shadow-card: none;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { overflow-x: hidden; }
+    img, svg, video, canvas { max-width: 100%; height: auto; }
+    button, input, select, textarea { max-width: 100%; }
+    pre, code { max-width: 100%; overflow-wrap: anywhere; }
+    .overflow-x-auto { -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+    .app-container, main, section, article { min-width: 0; }
+    body {
+      position: relative;
+      background: var(--page-bg);
+      background-attachment: fixed;
+      color: var(--text-1);
+      letter-spacing: -0.011em;
+      min-height: 100vh;
+      font-weight: 500;
+      font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif !important;
+      padding-top: calc(70px + env(safe-area-inset-top) + var(--announce-h, 0px));
+      padding-bottom: 50px;
+      /* html di atas memakai overflow-x:hidden, jadi elemen yang terlalu
+         lebar tidak bisa digulir -- teksnya dipotong begitu saja dan
+         isinya hilang tanpa jejak. overflow-wrap membuat token panjang
+         (URL, ID, nama kolom) dipatah antarhuruf alih-alih dipotong.
+         Tidak berpengaruh pada <pre> yang white-space:pre, dan tidak
+         menyentuh elemen ber-overflow:hidden + ellipsis. */
+      overflow-wrap: break-word;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color .3s ease, color .3s ease;
+    }
+
+    .glass-card {
+      background: var(--surface);
+      border: 1px solid var(--border-1);
+      box-shadow: var(--shadow-card);
+    }
+    .dark .glass-card { backdrop-filter: none; -webkit-backdrop-filter: none; }
+
+    .status-badge {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      font-weight: 600;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #fff;
+      text-transform: capitalize;
+    }
+
+    .status-success { background: rgba(34,197,94,.12); color: #22c55e; border: 1px solid rgba(34,197,94,.28); }
+    .status-pending { background: rgba(249,185,49,.16); color: #d89a12; border: 1px solid rgba(249,185,49,.32); }
+    .status-error { background: rgba(239,95,95,.12); color: #ef5f5f; border: 1px solid rgba(239,95,95,.28); }
+    .dark .status-success { color: #5cd88a; }
+    .dark .status-pending { color: #fbcb63; }
+    .dark .status-error { color: #f38686; }
+
+    .fixed-navbar {
+      top: var(--announce-h, 0px); left: 0; width: 100%; z-index: 40; height: calc(70px + env(safe-area-inset-top));
+      background: var(--nav-grad);
+      position: fixed;
+      border: none;
+      box-shadow: 0 8px 30px -12px rgba(79, 141, 232,0.45);
+    }
+    .navbar-container {
+      max-width: 72rem; margin: 0 auto; display: flex; justify-content: space-between;
+      align-items: center; padding: 0 clamp(0.75rem, 3vw, 1.5rem); height: 100%;
+      min-width: 0;
+    }
+    /* Di halaman dengan hero gelap, navbar jadi kaca gelap: menyatu dengan hero
+       tetapi tetap maintains teks putih saat di-scroll melewati section terang. */
+    .navbar-over-dark {
+      background: rgba(9, 16, 26, 0.82);
+      -webkit-backdrop-filter: saturate(160%) blur(14px);
+      backdrop-filter: saturate(160%) blur(14px);
+      box-shadow: 0 1px 0 rgba(148, 178, 210, 0.16);
+      border-bottom: 1px solid rgba(148, 178, 210, 0.14);
+    }
+    .navbar-over-dark .bg-white\/10 { background-color: rgba(248, 250, 252, 0.10) !important; }
+    .navbar-over-dark .border-white\/10 { border-color: rgba(248, 250, 252, 0.18) !important; }
+    @media (prefers-reduced-motion: reduce) { .navbar-over-dark { -webkit-backdrop-filter: none; backdrop-filter: none; background: #09101a; } }
+
+    .hamburger-menu-wrapper { position: relative; }
+    .hamburger-checkbox { display: none; }
+    .hamburger-button {
+      display: flex; flex-direction: column; justify-content: center; align-items: end;
+      width: 30px; height: 40px; gap: 5px; cursor: pointer; z-index: 50; 
+      position: relative; border-radius: 8px; transition: background 0.2s;
+    }
+    .hamburger-button span {
+      display: block; width: 22px; height: 2px; 
+      background: #ffffff; 
+      transition: all 0.3s ease-in-out; border-radius: 2px; margin: 0;
+    }
+    .hamburger-button span:nth-child(2) { width: 16px; }    
+    .hamburger-checkbox:checked ~ .hamburger-button span:nth-child(1) { transform: translateY(7px) rotate(45deg); background: #1567c8; }
+    .hamburger-checkbox:checked ~ .hamburger-button span:nth-child(2) { opacity: 0; }
+    .hamburger-checkbox:checked ~ .hamburger-button span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); background: #1567c8; }
+
+    .mobile-menu {
+      position: fixed; top: 0; right: max(-320px, calc(-1 * min(280px, calc(100vw - 24px)))); width: min(280px, calc(100vw - 24px)); height: 100vh; height: 100dvh; max-height: 100dvh; box-sizing: border-box; background: #ffffff;
+      transition: right 0.4s cubic-bezier(0.4, 0.2, 0, 1); z-index: 45; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; touch-action: pan-y;
+      padding-top: 80px; padding-bottom: max(1rem, env(safe-area-inset-bottom)); box-shadow: -10px 0 25px rgba(0,0,0,0.05); border-left: 1px solid #f1f5f9;
+    }
+    .hamburger-checkbox:checked ~ .mobile-menu { right: 0; }
+    .mobile-menu-items { padding: 1.5rem; }
+    .mobile-menu-divider { height: 1px; background: #f1f5f9; margin: 1.25rem 0; }
+    
+    .mobile-menu-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100dvh;
+      background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(3px); 
+      z-index: 44; opacity: 0; visibility: hidden; transition: all 0.3s ease; cursor: pointer;
+    }
+    .hamburger-checkbox:checked ~ .mobile-menu-overlay { opacity: 1; visibility: visible; }
+
+    .desktop-menu { display: none; min-width: 0; max-width: calc(100vw - 260px); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; white-space: nowrap; }
+    .desktop-menu::-webkit-scrollbar { display: none; }
+    .desktop-menu > * { flex-shrink: 0; }
+    @media (max-width: 640px) {
+      body { padding-top: calc(64px + env(safe-area-inset-top) + var(--announce-h, 0px)); }
+      .fixed-navbar { height: calc(64px + env(safe-area-inset-top)); }
+      .navbar-container { padding-left: 0.75rem; padding-right: 0.75rem; }
+      .navbar-container > a { min-width: 0; max-width: 55vw; }
+      .navbar-container > a img { max-width: 55vw; height: 3rem; }
+      .mobile-menu { padding-top: calc(72px + var(--announce-h, 0px)); }
+      #notificationModal > div:last-child { padding-left: 0.75rem; padding-right: 0.75rem; }
+    }
+    @media (min-width: 1024px) { .desktop-menu { display: flex; } }
+
+    /* ============================================================
+       DESIGN SYSTEM, satu sumber kebenaran untuk seluruh aplikasi.
+       CATATAN PENTING: stylesheet ini dimuat SEBELUM style yang
+       disuntik Tailwind CDN, jadi setiap override di bawah wajib
+       memakai !important agar menang di cascade.
+       ============================================================ */
+
+    /* --- 1. Skala radius: 8 (kecil), 12 (tile/kontrol), 16 (kartu), pill ---
+       Sebelumnya ada 16 nilai radius berbeda (5 sampai 32px) untuk satu
+       Peran yang sama, sehingga kartu, input, dan tombol terlihat
+       dibuat tanpa aturan. */
+    body .rounded-\[5px\], body .rounded-\[6px\], body .rounded-\[7px\], body .rounded-\[8px\],
+    body .rounded-t-\[4px\], body .rounded-t-\[28px\],
+    body .rounded-md, body .rounded-lg { border-radius: 8px !important; }
+    body .rounded-\[10px\], body .rounded-\[11px\], body .rounded-\[12px\],
+    body .rounded-b-\[44px\], body .rounded-xl { border-radius: 12px !important; }
+    body .rounded-\[14px\], body .rounded-\[15px\], body .rounded-\[16px\],
+    body .rounded-\[18px\], body .rounded-\[20px\], body .rounded-\[22px\],
+    body .rounded-\[24px\], body .rounded-\[26px\], body .rounded-\[28px\],
+    body .rounded-\[32px\], body .rounded-\[2\.25rem\],
+    body .rounded-2xl, body .rounded-3xl { border-radius: 16px !important; }
+    /* .rounded-full (pill, avatar, titik dekoratif) sengaja tidak disentuh. */
+
+    /* --- 2. Skala tipografi -------------------------------------
+       Dudukan (UI app)      : h1 24, h2 18, h3 14 px
+       P deceit/landing      : .t-h1 34/43/50, .t-h2 27/32/36, .t-h3 20, .t-h4 15.5
+       Line-height ditulis eksplisit karena `leading-*` bawaan tidak
+       konsisten antar browser dan sempat menghasilkan lh < font-size. */
+    h1 { font-size: 1.5rem !important;   line-height: 1.25 !important; font-weight: 700 !important; letter-spacing: -0.015em !important; }
+    h2 { font-size: 1.125rem !important; line-height: 1.35 !important; font-weight: 700 !important; letter-spacing: -0.01em !important; }
+    h3 { font-size: 0.875rem !important; line-height: 1.45 !important; font-weight: 600 !important; }
+    .t-h1 { font-size: 2.125rem !important;   line-height: 1.12 !important; font-weight: 700 !important; letter-spacing: -0.02em !important; }
+    .t-h2 { font-size: 1.6875rem !important; line-height: 1.18 !important; font-weight: 700 !important; letter-spacing: -0.015em !important; }
+    .t-h3 { font-size: 1.25rem !important;    line-height: 1.35 !important; font-weight: 700 !important; letter-spacing: -0.01em !important; }
+    .t-h4 { font-size: 0.96875rem !important; line-height: 1.5 !important;  font-weight: 600 !important; }
+    /* Angka besar (mis. saldo dashboard) perlu lolos dari skala h2. */
+    .t-display { font-size: 2.25rem !important; line-height: 1.1 !important; font-weight: 600 !important; letter-spacing: -0.02em !important; }
+    .t-display-sm { font-size: 1.5rem !important; line-height: 1.2 !important; font-weight: 600 !important; letter-spacing: -0.015em !important; }
+    @media (min-width: 640px) {
+      .t-h1 { font-size: 2.6875rem !important; } .t-h2 { font-size: 2rem !important; }
+    }
+    @media (min-width: 1024px) {
+      .t-h1 { font-size: 3.125rem !important; } .t-h2 { font-size: 2.25rem !important; }
+    }
+
+    /* --- 3. Token warna & permukaan ------------------------------ */
+    .ink { color: var(--text-1) !important; }
+    /* Kontrol formulir yang TIDAK punya kelas bg-* selama ini jatuh ke default
+       browser (putih). Di dark mode teksnya terang -> putih di atas putih.
+       :where()/specifier 0 agar kelas bg-* dan text-* yang ada tetap menang. */
+    :root { color-scheme: light; }
+    .dark { color-scheme: dark; }
+    :where(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=submit]):not([type=button]), textarea, select) {
+      background-color: var(--surface);
+      color: var(--text-1);
+    }
+    .muted { color: var(--text-2) !important; }
+    .subtle { color: var(--text-3) !important; }
+    .brand-ink { color: var(--brand) !important; }
+    body .bg-white { background-color: var(--surface) !important; }
+    body .bg-slate-50 { background-color: var(--surface-2) !important; }
+    /* Tiga bobot border slate untuk satu peran: disatukan ke --border-1. */
+    body .border-slate-100, body .border-slate-200, body .border-slate-300 { border-color: var(--border-1) !important; }
+    .elev { box-shadow: var(--shadow-card) !important; }
+
+    /* --- 4. Skala spacing -----------------------------------------
+       Hasil audit ritme vertikal & padding (35 halaman, light/dark,
+       375/1440). Sebelumnya tiap file menulis angkanya sendiri sehingga
+       jarak antar kartuHsnail berbeda-beda antar halaman. Sekarang
+       setiap nilai punya satu peran yang jelas:
+
+         4px  jarak kecil di dalam satu elemen
+         8px  label ke input, baris list yang rapat
+        12px  kotak peringatan, badge, panel di dalam kartu
+        16px  panel di dalam kartu, sel tabel
+        20px  PADDING KARTU KONTEN
+        24px  JARAK ANTAR SECTION / padding horizontal halaman
+        28px  JARAK HEADING KE KONTEN PERTAMA
+        32px  padding atas wrapper halaman, kartu kosong (empty state)
+
+       Jangan menambah nilai baru di sini untuk kebutuhan satu halaman:
+       pakai nilai yang paling dekat agar seluruh aplikasi tetap satu
+       irama. Butuh jarak ekstra? Tambah satu langkah baru di blok ini
+       dan pakai di mana-mana, bukan angka acak di satu file saja. */
+    :root {
+      --sp-1: 4px;
+      --sp-2: 8px;
+      --sp-3: 12px;
+      --sp-4: 16px;
+      --sp-5: 20px;   /* padding kartu */
+      --sp-6: 24px;   /* jarak antar section */
+      --sp-7: 28px;   /* heading ke konten */
+      --sp-8: 32px;   /* atas halaman, empty state */
+      /* Ruang jeda antara konten terakhir dan garis footer. Tanpa ini
+         konten menempel langsung ke footer di 22 dari 24 halaman. */
+      --sp-page-bottom: 64px;
+    }
+    @media (min-width: 768px) { :root { --sp-page-bottom: 96px; } }
+    /* Padding horizontal wrapper halaman. Dipakai lewat kelas .page-wrap
+       supaya 36 halaman tidak menulis px-6 pt-8 sendiri-sendiri. */
+    .page-wrap {
+      padding-left: var(--sp-6);
+      padding-right: var(--sp-6);
+      padding-top: var(--sp-8);
+      padding-bottom: var(--sp-page-bottom);
+    }
+    /* Padding kartu konten, menggantikan p-5 yang tersebar di tiap file. */
+    .card-pad { padding: var(--sp-5); }
+    /* Jarak antar anak yang bertumpuk, menggantikan mb-6 pada tiap kartu. */
+    .stack > * + * { margin-top: var(--sp-6); }
+
+    /* --- 5. Bar pengumuman ---------------------------------------
+       Bar di paling atas, di atas navbar. Tingginya dinamis karena teksnya
+       bisa membungkus di layar sempit, jadi diukur oleh JS lalu disimpan
+       di --announce-h. Navbar dan badan halaman ikut turun agar tidak ada
+       yang tertutup. */
+    .announce-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1200;
+      color: #fff;
+    }
+    .announce-bar[data-level="critical"] { background: #c62828; }
+    .announce-bar[data-level="warning"]  { background: #9a5b0a; }
+    .announce-bar[data-level="info"]     { background: #3a76cf; }
+    .announce-bar .announce-link { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
+    .announce-bar .announce-link:hover { color: #fff; opacity: .85; }
+    .announce-bar button { color: #fff; }
+    .announce-bar button:hover { background: rgba(255, 255, 255, .16); }
+
+    /* --- 6. Utilitas teks bersama -------------------------------- */
+    .text-balance { text-wrap: balance; }
+    .text-pretty { text-wrap: pretty; }
+    .eyebrow { font-size: 12.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+
+    /* ============ WCAG AA: kontras teks ============ */
+    /* slate-400 asli hanya 2.56:1 di putih, dinaikkan ke 5.5:1. */
+    .text-slate-400 { color: var(--text-3) !important; }
+    /* slate-500 asli 4.76:1 di putih, tetapi hanya ~4.4:1 di atas surface-2/tint.
+       Dinaikkan ke text-2 (7.6:1) agar selalu terbaca. */
+    .text-slate-500 { color: var(--text-2) !important; }
+    /* amber-500/600 pada badge hanya ~2.2-3.1:1 di atas putih. */
+    .text-amber-500 { color: #8a5200 !important; }
+    .text-amber-600 { color: #8a5200 !important; }
+    .text-orange-600 { color: #9a3412 !important; }
+    /* finance-green #22c55e hanya 2.28:1 di putih, emerald-700 = 5.0:1. */
+    .text-finance-green { color: #0f7a52 !important; }
+    /* finance-red #ef5f5f hanya 3.24:1 di putih, red-700 = 5.1:1. */
+    .text-finance-red { color: #c62828 !important; }
+    /* finance-blue #3a76cf = 4.6:1 di putih, aman untuk teks ukuran normal; teks kecil pakai #2f63b8. */
+    .text-finance-blue { color: #2f63b8 !important; }
+    .bg-finance-red { background-color: #c62828 !important; }
+    .status-success { color: #0f7a52; }
+    .status-error { color: #c62828; }
+    .bg-green-500, .bg-emerald-500 { background-color: #0f7a52 !important; }
+    .text-green-500, .text-emerald-500, .text-green-600, .text-emerald-600 { color: #0f7a52 !important; }
+    .text-green-700, .text-emerald-700 { color: #0b6142 !important; }
+    .text-red-500, .text-rose-500 { color: #c62828 !important; }
+    .text-red-600, .text-rose-600 { color: #b91c1c !important; }
+    /* Latar biru + teks putih: pakai #3a76cf (4.0:1) untuk tombol & badge. */
+    .dark .text-finance-blue { color: var(--brand) !important; }
+    .dark .text-finance-green, .dark .text-green-600, .dark .text-emerald-600 { color: #5cd88a !important; }
+    .dark .text-green-500, .dark .text-emerald-500 { color: #4ade80 !important; }
+    .dark .text-finance-red, .dark .text-red-500, .dark .text-rose-500 { color: #f38686 !important; }
+
+    .dark .bg-white { background-color: var(--surface) !important; }
+    .dark .bg-slate-50, .dark .bg-slate-50\/80, .dark .bg-slate-50\/60 { background-color: var(--surface-2) !important; }
+    .dark .bg-slate-100 { background-color: var(--surface-2) !important; }
+    .dark .bg-slate-200 { background-color: var(--surface-3) !important; }
+    .dark .bg-pastel-blue { background-color: var(--brand-subtle) !important; }
+    /* Varian opasitas (mis. bg-pastel-blue/60) tidak tertangkap override di atas. */
+    .dark .bg-pastel-blue\/60 { background-color: var(--brand-subtle) !important; }
+    /* Badge status berwarna: di lighten pada dark mode. Tanpa ini kotak terang
+       berpasangan dengan teks terang sehingga nyaris tidak terbaca. */
+    .dark .bg-amber-50, .dark .bg-orange-50, .dark .bg-yellow-50 { background-color: rgba(217, 119, 6, .14) !important; }
+    .dark .bg-amber-100, .dark .bg-orange-100, .dark .bg-yellow-100 { background-color: rgba(217, 119, 6, .20) !important; }
+    .dark .border-amber-100, .dark .border-amber-200, .dark .border-orange-200, .dark .border-yellow-200 { border-color: rgba(217, 119, 6, .30) !important; }
+    .dark .text-amber-500, .dark .text-orange-500 { color: #f0b45f !important; }
+    .dark .text-amber-600, .dark .text-orange-600 { color: #f0b45f !important; }
+    .dark .text-amber-700, .dark .text-orange-700 { color: #f7c988 !important; }
+    .dark .text-amber-800, .dark .text-orange-800 { color: #fbd6a4 !important; }
+    .dark .bg-blue-50 { background-color: rgba(79, 141, 232, .28) !important; }
+    .dark .border-blue-100, .dark .border-blue-200 { border-color: rgba(168, 190, 232, .30) !important; }
+    .dark .text-blue-600, .dark .text-blue-700 { color: #a8bee8 !important; }
+    .dark .bg-\[\#f8fafc\] { background-color: var(--page-bg) !important; }
+    .dark .text-slate-900, .dark .text-slate-800, .dark .text-slate-700 { color: var(--text-1) !important; }
+    .dark .text-slate-600, .dark .text-slate-500 { color: var(--text-2) !important; }
+    .dark .text-slate-400, .dark .text-slate-300 { color: var(--text-3) !important; }
+    .dark .text-finance-blue { color: var(--brand) !important; }
+    .dark .border-slate-100, .dark .border-slate-200, .dark .border-slate-300, .dark .border-white { border-color: var(--border-1) !important; }
+
+    .dark .hover\:bg-slate-50:hover, .dark .hover\:bg-slate-100:hover { background-color: var(--surface-3) !important; }
+    .dark .hover\:bg-rose-50:hover { background-color: rgba(239,95,95,.12) !important; }
+    .dark .mobile-menu { background: var(--surface); border-left: 1px solid var(--border-1); }
+    .dark .mobile-menu-divider { background: var(--border-1) !important; }
+    .dark #notificationModal { background: var(--page-bg) !important; }
+    .dark ::-webkit-scrollbar-thumb { background: #3a4650; }
+    .dark .bg-green-100 { background-color: rgba(34,197,94,.14) !important; }
+    .dark .border-green-400 { border-color: rgba(34,197,94,.4) !important; }
+    .dark .text-green-800 { color: #5cd88a !important; }
+    .dark .bg-red-100 { background-color: rgba(239,95,95,.14) !important; }
+    .dark .border-red-400 { border-color: rgba(239,95,95,.4) !important; }
+    .dark .text-red-800 { color: #f38686 !important; }
+    .dark .bg-gray-200 { background-color: var(--surface-2) !important; }
+    .dark .border-gray-300 { border-color: var(--border-1) !important; }
+    .dark .text-gray-900 { color: var(--text-1) !important; }
+
+    .dark .bg-emerald-50, .dark .bg-green-50 { background-color: rgba(34,197,94,.12) !important; }
+    .dark .border-emerald-100, .dark .border-emerald-200, .dark .border-green-200 { border-color: rgba(34,197,94,.3) !important; }
+    .dark .ring-emerald-100, .dark .ring-emerald-200 { --tw-ring-color: rgba(34,197,94,.3) !important; }
+    .dark .text-emerald-700, .dark .text-green-600 { color: #5cd88a !important; }
+
+    .dark .bg-rose-50, .dark .bg-red-50 { background-color: rgba(239,95,95,.12) !important; }
+    .dark .bg-rose-50\/50 { background-color: rgba(239,95,95,.07) !important; }
+    .dark .border-rose-100, .dark .border-rose-200, .dark .border-red-200 { border-color: rgba(239,95,95,.3) !important; }
+    .dark .ring-rose-100, .dark .ring-rose-200 { --tw-ring-color: rgba(239,95,95,.3) !important; }
+    .dark .text-rose-500, .dark .text-rose-600, .dark .text-rose-700, .dark .text-red-500, .dark .text-red-600 { color: #f38686 !important; }
+
+    .dark .bg-amber-50, .dark .bg-amber-50\/60 { background-color: rgba(249,185,49,.12) !important; }
+    .dark .border-amber-100, .dark .border-amber-200 { border-color: rgba(249,185,49,.3) !important; }
+    .dark .ring-amber-100, .dark .ring-amber-200 { --tw-ring-color: rgba(249,185,49,.3) !important; }
+    .dark .text-amber-500 { color: #f9b931 !important; }
+    .dark .text-amber-600, .dark .text-amber-700 { color: #fbcb63 !important; }
+
+    .dark .bg-sky-50, .dark .bg-sky-50\/80 { background-color: var(--brand-subtle) !important; }
+    .dark .border-sky-100 { border-color: var(--brand-border) !important; }
+    .dark .text-sky-600 { color: var(--brand) !important; }
+
+    .dark .ring-slate-100, .dark .ring-slate-200, .dark .ring-slate-300 { --tw-ring-color: var(--border-1) !important; }
+    .dark .ring-white { --tw-ring-color: var(--surface) !important; }
+    .dark .hover\:ring-slate-300:hover { --tw-ring-color: var(--text-3) !important; }
+    .dark input:focus-within\:bg-white, .dark .focus-within\:bg-white:focus-within { background-color: var(--surface) !important; }
+    .dark .to-slate-700 { --tw-gradient-to: #1567c8 !important; }
+    .dark .hover\:bg-slate-700:hover { background-color: #1877d6 !important; }
+    .dark .ink { color: var(--text-1) !important; }
+    .dark .bg-slate-50\/70 { background-color: var(--surface-2) !important; }
+    .dark .bg-slate-100\/70 { background-color: var(--surface-2) !important; }
+    .dark .bg-slate-200\/45, .dark .bg-slate-300\/35 { background-color: var(--surface-3) !important; }
+    .dark .border-slate-50, .dark .border-slate-100\/80 { border-color: var(--border-1) !important; }
+    .dark .hover\:bg-slate-200:hover { background-color: var(--surface-3) !important; }
+    .dark .hover\:bg-slate-50\/50:hover { background-color: var(--surface-2) !important; }
+    .dark .hover\:bg-gray-50:hover { background-color: var(--surface-2) !important; }
+    .dark .text-gray-600, .dark .text-gray-700 { color: var(--text-2) !important; }
+    .dark .border-blue-100 { border-color: var(--brand-border) !important; }
+    .dark .to-slate-200 { --tw-gradient-to: var(--surface-3) !important; }
+    .dark .bg-gray-50 { background-color: var(--surface-2) !important; }
+    .dark .border-gray-100, .dark .border-gray-200 { border-color: var(--border-1) !important; }
+
+    .dark .bg-indigo-50, .dark .bg-violet-50, .dark .bg-purple-50, .dark .bg-teal-50, .dark .bg-cyan-50 { background-color: var(--brand-subtle) !important; }
+    .dark .border-indigo-200, .dark .border-violet-200 { border-color: var(--brand-border) !important; }
+    .dark .text-indigo-600, .dark .text-violet-600, .dark .text-purple-600, .dark .text-teal-600, .dark .text-cyan-600 { color: var(--brand) !important; }
+    .dark .bg-\[\#229ED9\] { background-color: #1c84ee !important; }
+    .dark .from-amber-300 { --tw-gradient-from: #d89a12 !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(249,185,49,0)); }
+    .dark .to-yellow-500 { --tw-gradient-to: #f9b931 !important; }
+    .dark .from-amber-50 { --tw-gradient-from: rgba(249,185,49,.10) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(249,185,49,0)); }
+    .dark .to-yellow-50 { --tw-gradient-to: transparent !important; }
+    .dark .grid-paper {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    }
+
+    /* ============ WCAG AA: lantai ukuran teks & target sentuh ============ */
+    /* Font 9/10px di bawah batas keterbacaan; dinaikkan ke 12px tanpa mengubah layout flow. */
+    .text-\[9px\], .text-\[10px\], .text-\[11px\] { font-size: 12px !important; }
+    .text-\[9px\].leading-none, .text-\[10px\].leading-none, .text-\[11px\].leading-none { line-height: 1.35 !important; }
+    .text-\[10\.5px\] { font-size: 12px !important; }
+    /* Target sentuh minimum 44px (WCAG 2.5.5 / material) untuk kontrol utama. */
+    .tap, a.tap-sm { position: relative; }
+    .tap::after, a.tap-sm::after {
+      content: ''; position: absolute; left: 0; right: 0; top: 50%;
+      height: max(100%, 44px); transform: translateY(-50%); pointer-events: none;
+    }
+    a.tap-sm::after { left: -8px; right: -8px; }
+    /* Navigasi & tombol: tinggi minimum tanpa mengubah lebar. */
+    .desktop-menu a, .navbar-container button, .navbar-container > a[href] { min-height: 44px; }
+    .hamburger-button { min-width: 44px; min-height: 44px; }
+    /* Kontrol formulir: tinggi minimum 44px, kecuali bila punya padding vertikal eksplisit yang lebih kecil. */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+    select, textarea { min-height: 44px; }
+    input[type="checkbox"], input[type="radio"] { min-height: 20px; min-width: 20px; }
+    /* Hairline: garis 1px yang tetap terlihat di mode terang. */
+    .hairline { box-shadow: inset 0 1px 1px rgba(255,255,255,0.9), 0 0 0 1px rgba(15,23,42,0.09); }
+    .dark .hairline { box-shadow: inset 0 1px 1px rgba(255,255,255,0.04), 0 0 0 1px rgba(248,250,252,0.12); }
+
+    /* Fokus keyboard harus selalu terlihat (checklist aksesibilitas skill). */
+    a:focus-visible, button:focus-visible, input:focus-visible,
+    select:focus-visible, textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
+    .dark a:focus-visible, .dark button:focus-visible, .dark summary:focus-visible { outline-color: var(--brand); }
+    /* Anchor harus melewati navbar fixed, dan scroll halus. */
+    html { scroll-behavior: smooth; }
+    :target, [id] { scroll-margin-top: calc(84px + env(safe-area-inset-top)); }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    /* Cegah highlight biru bawaan yang merusak estetika */
+    ::selection { background: var(--brand-subtle); }
+
+    /* Tautan aksen: biru teks yang aman (5.6:1) dengan garis bawah saat hover */
+    .link-underline {
+      background-image: linear-gradient(currentColor, currentColor);
+      background-repeat: no-repeat;
+      background-size: 0% 1px;
+      background-position: 0 100%;
+      transition: background-size 0.25s ease;
+    }
+    .link-underline:hover { background-size: 100% 1px; }
+    /* Animasi masuk hanya jalan bila JS aktif. Tanpa JS (atau JS gagal dimuat)
+       konten tetap terlihat penuh, tidak pernah hilang di opacity 0. */
+    .js .reveal { opacity: 0; transform: translateY(14px); filter: blur(3px); }
+    .js .reveal.in { opacity: 1; transform: translateY(0); filter: blur(0);
+      transition: opacity .55s cubic-bezier(0.32,0.72,0,1), transform .55s cubic-bezier(0.32,0.72,0,1), filter .55s cubic-bezier(0.32,0.72,0,1); }
+    @media (prefers-reduced-motion: reduce) {
+      .js .reveal { opacity: 1; transform: none; filter: none; }
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+    /* Affordance: elemen yang bisa diklik harus menunjukkan pointer */
+    a, button, summary, [role="button"], label[for] { cursor: pointer; }
+  </style>
+  <script>document.documentElement.classList.add('js');</script>
+<script>
+// Pembaca JSON yang aman untuk semua fetch di halaman.
+//
+// Awalnya setiap form memakai response.json() langsung. Kalau sesi sudah
+// habis, middleware isAuth membalas 302 ke /login dan fetch otomatis
+// mengikuti redirect itu, sehingga yang diterima adalah halaman HTML.
+// Akibatnya pengguna hanya melihat "Unexpected token '<'" yang tidak
+// berguna dan tidak tahu harus masuk ulang.
+window.apiJson = async function (response) {
+  if (response && response.redirected) {
+    let path = '';
+    try { path = new URL(response.url).pathname; } catch (e) { /* abaikan */ }
+    if (path === '/login' || path === '/logout') {
+      throw new Error('Sesi Anda sudah berakhir. Silakan masuk ulang lalu coba lagi.');
+    }
+  }
+  const type = (response.headers && response.headers.get('content-type')) || '';
+  const text = await response.text();
+  if (!text) throw new Error('Server tidak mengirim balasan. Silakan coba lagi.');
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    if (type.indexOf('text/html') !== -1 || /^\s*<(!doctype|html)/i.test(text)) {
+      throw new Error('Server membalas halaman web, bukan data. Sesi Anda mungkin sudah berakhir. Silakan masuk ulang.');
+    }
+    throw new Error('Respons server tidak dapat dibaca. Silakan coba lagi.');
+  }
+};
+</script>

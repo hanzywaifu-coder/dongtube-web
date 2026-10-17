@@ -1,0 +1,127 @@
+<%- include('../partials/header', { title: 'Riwayat OTP Dongtube' })%>
+<div class="page-wrap max-w-[480px] md:max-w-4xl mx-auto">
+  <div class="reveal relative overflow-hidden rounded-[28px] p-5 mb-7 text-white" style="background:var(--nav-grad);"><div class="relative z-10 flex items-center gap-3"><a href="/otp" class="w-9 h-9 rounded-[12px] bg-white/20 flex items-center justify-center"><i class="fas fa-arrow-left"></i></a><div><h1 class="text-base font-bold">Riwayat OTP</h1><p class="text-[11px] text-white/70">Pesanan nomor Anda</p></div></div></div>
+  <% if (typeof error !== 'undefined' && error) {%>
+    <div class="bg-rose-50 border border-rose-100 text-finance-red px-5 py-4 rounded-[20px] mb-6 text-xs font-semibold flex items-center gap-3">
+      <div class="w-8 h-8 rounded-[12px] bg-rose-100 flex items-center justify-center shrink-0"><i class="fas fa-exclamation-circle text-xs"></i></div>
+      <p><%= error%></p>
+    </div>
+  <% }%>
+  <% const tabDefs = [['all','Semua'],['active','Aktif'],['completed','Selesai'],['canceled','Dibatalkan']]; const aktifTab = typeof tab !== 'undefined' ? tab : 'all'; const halaman = typeof page !== 'undefined' ? page : 1; const totalHalaman = typeof totalPages !== 'undefined' ? totalPages : 1; %>
+  <div class="flex gap-2 overflow-x-auto mb-4" role="tablist" aria-label="Filter status pesanan">
+    <% tabDefs.forEach(([key, label]) => { const n = Number((typeof tabs !== 'undefined' && tabs[key]) || 0); const aktif = aktifTab === key; %>
+      <a href="/otp/orders<%= key === 'all' ? '' : '?tab=' + key %>" role="tab" aria-selected="<%= aktif %>"
+        class="min-h-[44px] inline-flex items-center gap-1.5 px-4 rounded-[14px] text-[11px] font-bold whitespace-nowrap transition-all <%= aktif ? 'bg-finance-blue text-white shadow-soft' : 'bg-white text-slate-600 border border-white shadow-soft hover:text-finance-blue' %>"><%= label %><span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold <%= aktif ? 'bg-white/20' : 'bg-slate-100 text-slate-500' %>"><%= n %></span></a>
+    <% }) %>
+  </div>
+  <% if (!orders.length) {%><div class="bg-white rounded-[24px] p-10 text-center shadow-soft"><p class="text-sm font-bold text-slate-600"><%= aktifTab === 'all' ? 'Belum ada pesanan OTP' : 'Belum ada pesanan pada tab ini' %></p><a href="/otp" class="inline-block mt-4 bg-finance-blue text-white px-6 py-2.5 rounded-[14px] text-xs font-bold">Pesan Nomor</a></div><% } else {%>
+    <div class="grid gap-3">
+      <% orders.forEach((order, index) => { const statuses = { submitting:['Mengirim pesanan','bg-blue-50 text-blue-700'], active:['Menunggu OTP','bg-blue-50 text-blue-700'], received:['OTP diterima','bg-green-50 text-green-700'], finished:['Selesai','bg-green-50 text-green-700'], expired:['Berakhir tanpa kode','bg-slate-100 text-slate-600'], cancelled:['Dibatalkan','bg-slate-100 text-slate-600'], failed:['Gagal','bg-red-50 text-red-600'] }; const [label, style] = statuses[order.status] || [order.status, 'bg-slate-100 text-slate-600']; %>
+        <article class="bg-white rounded-[20px] p-4 shadow-soft border border-white" data-order-id="<%= order._id%>" data-status="<%= order.status%>" data-auto-poll="<%= order.status === 'active' && index < 5 ? 'true' : 'false'%>">
+          <div class="flex justify-between gap-3"><div class="min-w-0"><h2 class="text-[13px] font-bold text-slate-800"><%= order.serviceName%></h2><p class="text-[10px] text-slate-400 mt-1"><%= order.countryName%></p></div><span class="h-fit px-2 py-1 rounded-full text-[9px] font-bold <%= style%> order-status"><%= label%></span></div>
+          <div class="bg-slate-50 rounded-[14px] p-3 mt-3 space-y-2"><div class="flex justify-between text-[10px]"><span class="text-slate-400">Nomor</span><span class="font-mono font-bold text-slate-700"><%= order.phoneNumber || 'Menunggu konfirmasi'%></span></div><div class="flex justify-between text-[10px]"><span class="text-slate-400">Kode OTP</span><span class="font-mono font-bold text-finance-blue otp-value"><%= order.otp || 'Belum diterima'%></span></div><% const dl = (typeof otpDeadline === 'function' ? otpDeadline(order) : order.expiresAtMs); if (order.status === 'active' && dl) {%><div class="flex justify-between text-[10px]"><span class="text-slate-400">Sisa waktu sewa nomor</span><span class="font-mono font-bold text-slate-700 otp-countdown" data-expires-ms="<%= dl %>">-</span></div><% }%><% if (order.otpMessage) {%><div class="text-[10px] text-amber-700 break-all">SMS masuk tanpa kode terdeteksi: <%= order.otpMessage%></div><% }%><div class="flex justify-between text-[10px]"><span class="text-slate-400">Total</span><span class="font-bold text-slate-700">Rp <%= Number(order.amount).toLocaleString('id-ID')%></span></div><% if (order.refunded) {%><div class="text-[10px] text-green-600">Saldo sudah dikembalikan otomatis.</div><% }%></div>
+          <% if (['active'].includes(order.status)) {%><div class="flex gap-2 mt-3"><button type="button" class="otp-refresh flex-1 bg-slate-100 text-slate-700 rounded-[12px] py-2 text-[10px] font-bold">Periksa OTP</button><form action="/otp/orders/<%= order._id%>/cancel" method="POST" class="flex-1 otp-cancel-form" onsubmit="return confirm('Batalkan pesanan nomor ini? Saldo dikembalikan setelah pembatalan dikonfirmasi sistem. Setelah SMS diterima, pesanan tidak dapat dibatalkan.')"><button class="w-full bg-red-50 text-red-600 rounded-[12px] py-2 text-[10px] font-bold">Batalkan Pesanan</button></form></div><% }%>
+          <% if (order.status === 'received') {%><div class="flex gap-2 mt-3"><button type="button" class="otp-finish flex-1 bg-slate-100 text-slate-700 rounded-[12px] py-2 text-[10px] font-bold" data-finish-id="<%= order._id%>">Selesai</button></div><% }%>
+          <p class="text-[9px] text-slate-400 mt-3"><%= new Date(order.createdAt).toLocaleString('id-ID',{timeZone:'Asia/Jakarta',day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}).replace(/\./g,':')%> WIB</p>
+        </article>
+      <% })%>
+    </div>
+    <% if (totalHalaman > 1) { const href = p => '/otp/orders?tab=' + encodeURIComponent(aktifTab) + '&page=' + p; %>
+      <nav class="flex items-center justify-between gap-3 mt-4" aria-label="Paginasi riwayat">
+        <% if (halaman > 1) { %><a href="<%= href(halaman - 1) %>" class="min-h-[44px] inline-flex items-center px-4 rounded-[14px] bg-white border border-white shadow-soft text-[11px] font-bold text-slate-600 hover:text-finance-blue">Sebelumnya</a><% } else { %><span></span><% } %>
+        <span class="text-[11px] font-semibold text-slate-500">Halaman <%= halaman %> dari <%= totalHalaman %></span>
+        <% if (halaman < totalHalaman) { %><a href="<%= href(halaman + 1) %>" class="min-h-[44px] inline-flex items-center px-4 rounded-[14px] bg-white border border-white shadow-soft text-[11px] font-bold text-slate-600 hover:text-finance-blue">Berikutnya</a><% } else { %><span></span><% } %>
+      </nav>
+    <% } %>
+  <% }%>
+</div>
+<script>
+// Kartu yang dipantau otomatis selama halaman terbuka. Cek berkala (20 detik,
+// satu per satu, berhenti saat tidak ada lagi yang menunggu) supaya kode OTP
+// tampil tanpa harus menekan "Periksa OTP" berulang. Jeda sengaja jauh di
+// bawah batas limiter (40/menit) dan berhenti saat tab disembunyikan.
+const autoPollers = [];
+document.querySelectorAll('[data-order-id][data-status="active"]').forEach(card => {
+  const orderId = card.dataset.orderId;
+  const button = card.querySelector('.otp-refresh');
+  const statusLabel = card.querySelector('.order-status');
+  const otpValue = card.querySelector('.otp-value');
+  let busy = false;
+  async function refreshOtp(silent = false) {
+    if (busy) return; busy = true;
+    if (!silent && button) { button.disabled = true; button.textContent = 'Memeriksa...'; }
+    try {
+      const response = await fetch(`/otp/orders/${encodeURIComponent(orderId)}/status`);
+      const result = await apiJson(response);
+      if (!response.ok || !result.success) throw new Error(result.error || 'Status OTP gagal diperiksa.');
+      if (result.order.otp) otpValue.textContent = result.order.otp;
+      if (result.order.status === 'received') { statusLabel.textContent = 'OTP diterima'; statusLabel.className = 'h-fit px-2 py-1 rounded-full text-[9px] font-bold bg-green-50 text-green-700 order-status'; card.dataset.status = 'received'; button?.closest('.flex.gap-2')?.remove(); }
+      else if (result.order.status === 'cancelled' || result.order.status === 'failed' || result.order.status === 'expired') window.location.reload();
+    } catch (error) { if (!silent && button) button.textContent = error.message; }
+    finally { busy = false; if (!silent && button?.isConnected) { button.disabled = false; button.textContent = 'Periksa OTP'; } }
+  }
+  button?.addEventListener('click', () => refreshOtp(false));
+  const form = card.querySelector('.otp-cancel-form');
+  form?.addEventListener('submit', async event => {
+    event.preventDefault(); if (!confirm('Batalkan pesanan nomor ini? Saldo dikembalikan setelah pembatalan dikonfirmasi sistem. Setelah SMS diterima, pesanan tidak dapat dibatalkan.')) return;
+    const cancelButton = form.querySelector('button'); cancelButton.disabled = true; cancelButton.textContent = 'Memproses...';
+    try {
+      const response = await fetch(form.action, { method: 'POST', headers: { 'Accept': 'application/json' } });
+      const result = await apiJson(response); if (!response.ok || !result.success) throw new Error(result.error || 'Pembatalan gagal.');
+      window.location.reload();
+    } catch (error) { cancelButton.disabled = false; cancelButton.textContent = error.message; }
+  });
+  if (card.dataset.autoPoll === 'true') autoPollers.push({ card, refresh: refreshOtp, initial: true });
+});
+// Hitung mundur sewa nomor, "Sisa mm:ss" dari batas sewa penyedia.
+const countdownEls = document.querySelectorAll('.otp-countdown');
+if (countdownEls.length) {
+  const renderCountdown = () => {
+    let alive = 0;
+    countdownEls.forEach(el => {
+      if (!el.isConnected) return;
+      const expiresAtMs = Number(el.dataset.expiresMs);
+      const secs = Math.max(0, Math.floor((expiresAtMs - Date.now()) / 1000));
+      if (secs > 0) alive += 1;
+      const mm = String(Math.floor(secs / 60)).padStart(2, '0');
+      const ss = String(secs % 60).padStart(2, '0');
+      el.textContent = secs > 0 ? `${mm}:${ss}` : 'Berakhir';
+    });
+    if (!alive) clearInterval(countdownCycle);
+  };
+  const countdownCycle = setInterval(renderCountdown, 1000);
+  renderCountdown();
+}
+if (autoPollers.length) {
+  const tick = async () => {
+    for (const item of autoPollers.slice()) {
+      if (!item.card.isConnected || item.card.dataset.status !== 'active') continue;
+      await item.refresh(true);
+    }
+    if (!autoPollers.some(item => item.card.isConnected && item.card.dataset.status === 'active')) clearInterval(cycle);
+  };
+  const cycle = setInterval(() => { if (!document.hidden) tick(); }, 20000);
+  tick(); // cek pertama saat halaman dibuka
+}
+
+// Tandai selesai (POST /otp/orders/:id/finish): pesanan yang sudah menerima OTP
+// ditutup supaya tidak terus muncul di daftar pesanan aktif.
+document.querySelectorAll('[data-finish-id]').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const id = btn.dataset.finishId;
+    const label = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Menyelesaikan...';
+    try {
+      const r = await fetch(`/otp/orders/${encodeURIComponent(id)}/finish`, { method: 'POST', headers: { 'Accept': 'application/json' } });
+      const p = await apiJson(r);
+      if (!r.ok || !p || !p.success) throw new Error((p && p.error) || 'Pesanan tidak dapat ditandai selesai.');
+      window.location.reload();
+    } catch (error) {
+      btn.disabled = false; btn.textContent = label;
+      alert(error.message);
+    }
+  });
+});
+
+</script>
+<%- include('../partials/footer')%>

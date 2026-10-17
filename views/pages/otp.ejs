@@ -1,0 +1,1200 @@
+<%- include('../partials/header', { title: 'Dongtube OTP' })%>
+<style>
+/* Komponen khusus halaman OTP, palet mengikuti token situs
+   (finance-blue #4f8de8, pastel-blue #eaf2fd, kartu putih + shadow-soft). */
+.is-hidden{display:none!important}
+.otp-pills{scrollbar-width:thin;flex-wrap:wrap;gap:6px;max-height:180px;padding:4px 0;display:flex;overflow-y:auto}
+.otp-pill{border:1px solid #e8eef7;background:#f8fafc;color:#64748b;font-family:inherit;cursor:pointer;border-radius:999px;align-items:center;gap:7px;max-width:100%;padding:7px 13px;font-size:.83rem;font-weight:600;transition:all .18s;display:inline-flex}
+.otp-pill:hover{border-color:#bcd4f5;color:#4f8de8;background:#f0f6ff}
+.otp-pill:focus-visible{outline:2px solid #4f8de8;outline-offset:1px}
+.otp-pill.is-active{background:#eaf2fd;border-color:#4f8de8;color:#4f8de8;box-shadow:0 0 0 3px rgba(79,141,232,.13)}
+.otp-pill-letter{width:18px;height:18px;border-radius:50%;flex-shrink:0;display:inline-flex;justify-content:center;align-items:center;font-size:.65rem;font-weight:800;line-height:1}
+/* Logo layanan: SVG lokal hasil build simple-icons (public/img/otp-services).
+   object-fit contain supaya brand yang tidak persegi tetap proporsional. */
+.otp-pill-icon{width:18px;height:18px;flex-shrink:0;object-fit:contain}
+.otp-tile-icon{width:22px;height:22px;flex-shrink:0;object-fit:contain}
+.otp-pill-emoji{font-size:1rem;line-height:1}
+.otp-placeholder{width:100%;color:#94a3b8;background:#f8fafc;border:1px dashed #e2e8f0;border-radius:12px;justify-content:center;align-items:center;gap:8px;padding:24px 16px;font-size:.82rem;display:flex;text-align:center}
+.otp-placeholder.otp-error{color:#c62828;border-color:#f3c7c7;background:#fdf3f3}
+.otp-spin{animation:.8s linear infinite otpSpin}
+@keyframes otpSpin{to{transform:rotate(360deg)}}
+.otp-search-wrap{position:relative;width:100%;max-width:320px}
+.otp-search{border:1px solid #e8eef7;background:#f8fafc;color:#0f172a;font-family:inherit;border-radius:12px;outline:none;padding:9px 34px 9px 36px;font-size:.85rem;transition:all .2s;box-sizing:border-box;width:100%}
+.otp-search:focus{border-color:#4f8de8;box-shadow:0 0 0 3px rgba(79,141,232,.13);background:#fff}
+.otp-search::placeholder{color:#94a3b8}
+.otp-search-icon{position:absolute;top:50%;left:12px;transform:translateY(-50%);color:#94a3b8;pointer-events:none;font-size:.85rem}
+.otp-search-clear{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:24px;height:24px;border:none;background:transparent;color:#94a3b8;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;padding:0}
+.otp-search-clear:hover{background:#eaf2fd;color:#4f8de8}
+.otp-count{color:#94a3b8;font-size:.75rem;font-weight:600;margin-left:6px;text-transform:none;letter-spacing:normal}
+.otp-group-label{font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px}
+.otp-tiles{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+@media(min-width:768px){.otp-tiles{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.otp-tile{min-width:0;max-width:100%;border:1px solid #e8eef7;background:#f8fafc;cursor:pointer;font-family:inherit;text-align:left;border-radius:12px;align-items:center;gap:10px;width:100%;padding:12px 16px;font-size:.88rem;transition:all .2s;display:flex;color:inherit}
+.otp-tile:hover{border-color:#bcd4f5;background:#f0f6ff;box-shadow:0 4px 14px rgba(79,141,232,.10)}
+.otp-tile:focus-visible{outline:2px solid #4f8de8;outline-offset:1px}
+.otp-tile.is-active{border-color:#4f8de8;background:#eaf2fd;box-shadow:0 0 0 3px rgba(79,141,232,.13)}
+.otp-tile-label{min-width:0;color:#0f172a;text-overflow:ellipsis;white-space:nowrap;flex:1;font-weight:600;overflow:hidden}
+.otp-tile-stock{color:#94a3b8;flex-shrink:1;min-width:0;font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.otp-tile-price{color:#4f8de8;white-space:nowrap;flex-shrink:0;font-size:.9rem;font-weight:800}
+.otp-order-panel{background:#f8fafc;border:1px solid #e8eef7;border-radius:14px;flex-wrap:wrap;align-items:center;gap:16px;padding:16px 20px;display:flex}
+.otp-price-wrap{width:100%;display:flex;flex-direction:column;gap:6px}
+.otp-price-wrap .otp-pills{max-height:132px}
+.otp-pill-stock{color:#94a3b8;font-size:.72rem;font-weight:700}
+.otp-pill.is-disabled{opacity:.5;cursor:not-allowed;background:#f8fafc;border-color:#e8eef7;color:#94a3b8;text-decoration:line-through;text-decoration-color:#cbd5e1}
+.otp-pill.is-disabled:hover{border-color:#e8eef7;color:#94a3b8;background:#f8fafc}
+.otp-order-habis{color:#c62828;font-weight:700}
+.otp-order-summary{min-width:200px;color:#0f172a;flex:1;font-size:.9rem;line-height:1.5;font-weight:500}
+.otp-order-summary strong{color:#4f8de8}
+.otp-qty{border:1px solid #e8eef7;background:#fff;border-radius:10px;align-items:center;display:flex;overflow:hidden}
+.otp-qty button{width:36px;height:36px;color:#64748b;cursor:pointer;background:transparent;border:none;display:flex;align-items:center;justify-content:center;font-size:1.05rem;transition:all .15s}
+.otp-qty button:hover{background:#eaf2fd;color:#4f8de8}
+.otp-qty input{border:none;border-left:1px solid #e8eef7;border-right:1px solid #e8eef7;width:48px;height:36px;color:#0f172a;font-family:inherit;text-align:center;background:transparent;outline:none;font-size:.95rem;font-weight:700;-moz-appearance:textfield;box-sizing:border-box}
+/* iOS memperbesar layar otomatis bila font input < 16px saat fokus. */
+@media(max-width:640px){.otp-qty input{font-size:16px}}
+.otp-qty input::-webkit-outer-spin-button,.otp-qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.otp-qty input:focus{background:#f0f6ff}
+.otp-result{position:relative;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.otp-result.is-success{background:#f2fbf7;border:1px solid #cbeadd}
+.otp-result.is-error{background:#fdf3f3;border:1px solid #f3c7c7}
+.otp-result-header{display:flex;align-items:center;gap:10px}
+.otp-result-title{font-size:14px;font-weight:800}
+.otp-result.is-success .otp-result-title{color:#0f7a52}
+.otp-result.is-error .otp-result-title{color:#c62828}
+.otp-result-warn{margin-left:auto;font-size:.78rem;font-weight:700;color:#c62828}
+.otp-result-item{border-top:1px solid rgba(15,122,82,.12);display:flex;flex-direction:column;gap:10px;padding-top:14px}
+.otp-result.is-error .otp-result-item{border-top-color:rgba(198,40,40,.12)}
+.otp-result-item:first-of-type{border-top:0;padding-top:0}
+.otp-result-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.otp-result-label{font-size:.85rem;font-weight:700;color:#64748b}
+.otp-result-badge{text-transform:uppercase;letter-spacing:.05em;border-radius:6px;padding:2px 8px;font-size:.65rem;font-weight:800}
+.otp-result.is-success .otp-result-badge{background:#dff3ea;color:#0f7a52}
+.otp-result.is-error .otp-result-badge{background:#f8dede;color:#c62828}
+.otp-result-timer{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:.8rem;font-weight:700;color:#4f8de8}
+.otp-result-phone{display:flex;align-items:center;gap:8px;background:#f1f5f9;padding:8px 12px;border-radius:10px}
+.otp-result-phone span{word-break:break-all;font-family:"IBM Plex Mono",monospace;font-size:.95rem;color:#0f172a;font-weight:600}
+.otp-copy-btn{border:1px solid #e2e8f0;background:#fff;width:30px;height:30px;color:#64748b;cursor:pointer;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0}
+.otp-copy-btn:hover{border-color:#4f8de8;color:#4f8de8;background:#eaf2fd}
+.otp-copy-btn.is-copied{border-color:#0f7a52;color:#0f7a52;background:#f2fbf7}
+.otp-copy-btn svg{width:14px;height:14px}
+.otp-result-link{color:#4f8de8;border:1px solid #cfe1f8;border-radius:10px;display:inline-flex;justify-content:center;align-items:center;gap:6px;padding:8px 0;font-size:.8rem;font-weight:700;text-decoration:none;transition:all .15s}
+.otp-result-link:hover{background:#eaf2fd;border-color:#4f8de8}
+.otp-ao-card{background:#fff;border:1px solid #fff;box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 26px -10px rgba(16,24,40,.10);border-radius:20px;display:flex;flex-direction:column;position:relative;overflow:hidden;transition:all .25s}
+.otp-ao-card:hover{box-shadow:0 2px 6px rgba(16,24,40,.06),0 22px 50px -18px rgba(16,24,40,.18);transform:translateY(-2px)}
+.otp-ao-card.is-removing{opacity:0;transform:scale(.96) translateY(-8px);max-height:0!important;margin:0;padding:0;border-width:0;transition:all .3s ease-in-out;overflow:hidden}
+.otp-ao-head{display:flex;align-items:center;gap:10px;padding:14px 18px 0;flex-wrap:wrap}
+.otp-ao-id{font-family:"IBM Plex Mono",monospace;color:#4f8de8;font-size:.85rem;font-weight:700;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:42%}
+.otp-ao-badge{text-transform:uppercase;letter-spacing:.05em;border-radius:6px;padding:2px 9px;font-size:.65rem;font-weight:800;white-space:nowrap}
+.otp-ao-badge.badge-wait{background:#eaf2fd;color:#4f8de8}
+.otp-ao-badge.badge-done{background:#f2fbf7;color:#0f7a52}
+.otp-ao-service{color:#94a3b8;font-size:.75rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.otp-ao-timer{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:.78rem;font-weight:700;color:#4f8de8}
+.otp-ao-timer.timer-warn{color:#b45309}
+.otp-ao-timer.timer-urgent{color:#c62828}
+.otp-ao-timer.timer-expired{color:#94a3b8}
+.otp-ao-body{display:flex;flex-direction:column;gap:8px;padding:14px 18px}
+.otp-ao-field{display:flex;align-items:center;gap:10px}
+.otp-ao-label{text-transform:uppercase;color:#94a3b8;flex-shrink:0;width:96px;font-size:.68rem;font-weight:800}
+@media(max-width:480px){.otp-ao-label{width:72px}}
+.otp-ao-value{flex:1;align-items:center;gap:6px;min-width:0;display:flex}
+.otp-ao-phone{font-family:"IBM Plex Mono",monospace;color:#0f172a;font-size:.95rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.otp-ao-otp{font-family:"IBM Plex Mono",monospace;color:#4f8de8;letter-spacing:.08em;font-size:1rem;font-weight:800}
+.otp-ao-waiting{color:#94a3b8;font-size:.8rem;font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.otp-ao-message{min-width:0;color:#64748b;overflow-wrap:anywhere;white-space:pre-wrap;font-size:.8rem;line-height:1.45}
+.otp-ao-actions{border-top:1px solid #f1f5f9;display:grid;grid-template-columns:repeat(4,1fr)}
+/* Layar sempit: aksi pesanan aktif jadi grid 2x2 supaya label tidak gepeng. */
+@media(max-width:420px){
+  .otp-ao-actions{grid-template-columns:repeat(2,1fr)}
+  .otp-ao-btn+.otp-ao-btn{border-left:0}
+  .otp-ao-btn:nth-child(2n){border-left:1px solid #f1f5f9}
+  .otp-ao-btn:nth-child(n+3){border-top:1px solid #f1f5f9}
+}
+.otp-ao-btn{color:#94a3b8;font-family:inherit;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;background:transparent;border:none;display:inline-flex;justify-content:center;align-items:center;gap:5px;padding:11px 6px;font-size:.7rem;font-weight:800;transition:all .15s}
+.otp-ao-btn+.otp-ao-btn{border-left:1px solid #f1f5f9}
+.otp-ao-btn svg{flex-shrink:0;width:13px;height:13px}
+.otp-ao-btn:hover:enabled.otp-ao-finish{color:#0f7a52;background:#f2fbf7}
+.otp-ao-btn:hover:enabled.otp-ao-resend{color:#4f8de8;background:#eaf2fd}
+.otp-ao-btn:hover:enabled.otp-ao-cancel{color:#c62828;background:#fdf3f3}
+.otp-ao-btn:hover:enabled.otp-ao-replace{color:#b45309;background:#fdf6ec}
+.otp-ao-btn:disabled{opacity:.35;cursor:not-allowed}
+.otp-ao-btn.is-loading{opacity:.5;pointer-events:none}
+.otp-ao-btn.is-ok{color:#0f7a52!important;background:#f2fbf7!important}
+.otp-ao-btn.is-err{color:#c62828!important;background:#fdf3f3!important}
+.otp-chip{min-width:22px;height:22px;color:#4f8de8;font-size:.72rem;font-weight:800;background:#eaf2fd;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;padding:0 7px}
+.otp-toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);z-index:120;opacity:0;pointer-events:none;background:#0f172a;color:#fff;border-radius:12px;padding:10px 16px;font-size:.85rem;font-weight:600;transition:all .2s;display:flex;gap:8px;align-items:center;box-shadow:0 10px 30px rgba(15,23,42,.3);max-width:90vw}
+.otp-toast.is-show{opacity:1;transform:translate(-50%,0)}
+.otp-chart-empty{height:100%;color:#94a3b8;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;opacity:.7;font-size:.8rem}
+</style>
+
+<div class="page-wrap max-w-[480px] md:max-w-6xl mx-auto py-2">
+
+  <div class="reveal flex items-center gap-3.5 mb-6">
+    <div class="w-12 h-12 rounded-[16px] bg-pastel-blue text-finance-blue flex items-center justify-center shrink-0"><i class="fas fa-mobile-screen-button text-lg"></i></div>
+    <div class="min-w-0">
+      <h1 class="text-xl font-extrabold text-slate-900 truncate">Halo, <span class="text-finance-blue"><%= user.name || user.email || 'User' %></span></h1>
+      <p class="text-[11px] text-slate-400 mt-0.5">Beli nomor sementara dan terima kode verifikasi</p>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <section class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6" aria-label="Ringkasan">
+    <div class="bg-white rounded-[20px] border border-white shadow-soft p-4">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Saldo</span>
+        <div class="w-9 h-9 rounded-[12px] bg-pastel-blue text-finance-blue flex items-center justify-center shrink-0"><i class="fas fa-wallet text-sm"></i></div>
+      </div>
+      <div class="text-[17px] font-extrabold text-slate-900 mt-3 truncate" id="kpi-balance">Rp <%= Number(user.balance || 0).toLocaleString('id-ID') %></div>
+    </div>
+    <div class="bg-white rounded-[20px] border border-white shadow-soft p-4">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Pesanan</span>
+        <div class="w-9 h-9 rounded-[12px] bg-slate-100 text-slate-500 flex items-center justify-center shrink-0"><i class="fas fa-receipt text-sm"></i></div>
+      </div>
+      <div class="text-[17px] font-extrabold text-slate-900 mt-3" id="kpi-orders"><%= Number(otpStats?.total || 0) %></div>
+    </div>
+    <div class="bg-white rounded-[20px] border border-white shadow-soft p-4">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Aktif</span>
+        <div class="w-9 h-9 rounded-[12px] bg-amber-50 text-amber-500 flex items-center justify-center shrink-0"><i class="fas fa-hourglass-half text-sm"></i></div>
+      </div>
+      <div class="text-[17px] font-extrabold text-slate-900 mt-3" id="kpi-active"><%= Number(otpStats?.active || 0) %></div>
+    </div>
+    <div class="bg-white rounded-[20px] border border-white shadow-soft p-4">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Sukses</span>
+        <div class="w-9 h-9 rounded-[12px] bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><i class="fas fa-circle-check text-sm"></i></div>
+      </div>
+      <div class="text-[17px] font-extrabold text-slate-900 mt-3"><%= Number(otpStats?.successRate || 0) %><span class="text-[11px] text-slate-400 font-bold ml-0.5">%</span></div>
+    </div>
+  </section>
+
+  <!-- Grafik 7 hari -->
+  <section class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6" aria-label="Grafik">
+    <div class="bg-white rounded-[20px] border border-white shadow-soft p-4">
+      <div class="flex items-center justify-between mb-4"><h3 class="text-[13px] font-bold text-slate-800"><i class="fas fa-chart-line text-finance-blue mr-1.5"></i>Pesanan</h3><span class="text-[10px] text-slate-400 font-semibold">30 hari terakhir</span></div>
+      <div class="h-[200px] relative" id="chartOrdersWrap"><canvas id="chart-orders" role="img" aria-label="Grafik jumlah pesanan 7 hari terakhir"></canvas></div>
+    </div>
+    <div class="bg-white rounded-[20px] border border-white shadow-soft p-4">
+      <div class="flex items-center justify-between mb-4"><h3 class="text-[13px] font-bold text-slate-800"><i class="fas fa-coins text-finance-blue mr-1.5"></i>Pengeluaran</h3><span class="text-[10px] text-slate-400 font-semibold">30 hari terakhir</span></div>
+      <div class="h-[200px] relative" id="chartSpendingWrap"><canvas id="chart-spending" role="img" aria-label="Grafik pengeluaran 7 hari terakhir"></canvas></div>
+    </div>
+  </section>
+
+  <!-- Pesanan Aktif (diisi JS) -->
+  <section id="aoSection" class="mb-6 is-hidden" aria-label="Pesanan aktif">
+    <h2 class="text-[15px] font-extrabold text-slate-900 mb-3 flex items-center gap-2"><i class="fas fa-bolt text-finance-blue"></i> Pesanan Aktif <span class="otp-chip" id="aoCount">0</span></h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="aoGrid"></div>
+  </section>
+
+  <!-- Buat Pesanan -->
+  <section>
+    <h2 class="text-[15px] font-extrabold text-slate-900 mb-3 flex items-center gap-2"><i class="fas fa-cart-shopping text-finance-blue"></i> Buat Pesanan</h2>
+    <p class="text-[11px] text-slate-400 mb-4">Pilih layanan dan negara, lalu pilih harga yang ingin dibeli.</p>
+    <div class="bg-white rounded-[24px] border border-white shadow-soft p-5 flex flex-col gap-5">
+
+      <div class="flex flex-col gap-2.5">
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <span class="otp-group-label">Layanan <span class="otp-count" id="service-count"></span></span>
+          <div class="otp-search-wrap">
+            <i class="fas fa-magnifying-glass otp-search-icon"></i>
+            <input type="text" id="service-search" class="otp-search" placeholder="Cari layanan..." aria-label="Filter layanan">
+            <button type="button" class="otp-search-clear is-hidden" aria-label="Hapus pencarian"><i class="fas fa-xmark"></i></button>
+          </div>
+        </div>
+        <div class="otp-pills" id="service-pills" role="listbox" aria-label="Layanan"><div class="otp-placeholder">Memuat layanan...</div></div>
+      </div>
+
+      <div class="flex flex-col gap-2.5">
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <span class="otp-group-label">Negara <span class="otp-count" id="country-count"></span></span>
+          <div class="otp-search-wrap">
+            <i class="fas fa-magnifying-glass otp-search-icon"></i>
+            <input type="text" id="country-search" class="otp-search" placeholder="Cari negara..." aria-label="Filter negara">
+            <button type="button" class="otp-search-clear is-hidden" aria-label="Hapus pencarian"><i class="fas fa-xmark"></i></button>
+          </div>
+        </div>
+        <div class="otp-pills" id="country-pills" role="listbox" aria-label="Negara"><div class="otp-placeholder">Memuat negara...</div></div>
+      </div>
+
+      <!-- Operator (carrier): muncul HANYA bila kombinasi layanan+negara punya
+           pilihan di penyedia; tanpa pilihan, grup ini tetap tersembunyi dan
+           pesanan memakai carrier otomatis. Pilihan memengaruhi HARGA produk,
+           jadi katalog dimuat ulang saat operator berganti (ala dashboard). -->
+      <div class="flex flex-col gap-2.5 is-hidden" id="operator-group">
+        <span class="otp-group-label">Operator <span class="otp-count" id="operator-count"></span></span>
+        <div class="otp-pills" id="operator-pills" role="listbox" aria-label="Operator"></div>
+      </div>
+
+      <div class="flex flex-col gap-2.5 is-hidden" id="products-area">
+        <span class="otp-group-label">Produk <span class="otp-count" id="products-count"></span></span>
+        <div class="otp-tiles" id="products-grid"></div>
+      </div>
+
+      <div class="otp-order-panel is-hidden" id="order-panel">
+        <!-- Tangga harga: SEMUA harga layanan ini di negara terpilih, termasuk
+             yang stoknya habis (ditandai & tidak bisa diklik), supaya pemesan
+             bisa langsung pindah harga lain tanpa menebak-nebak. -->
+        <div class="otp-price-wrap is-hidden" id="price-wrap">
+          <span class="otp-group-label">Pilih harga <span class="otp-count" id="price-count"></span></span>
+          <div class="otp-pills" id="price-pills" role="listbox" aria-label="Daftar harga"></div>
+        </div>
+        <div class="otp-order-summary" id="order-summary"></div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <div class="otp-qty">
+            <button type="button" id="qty-minus" aria-label="Kurangi jumlah">−</button>
+            <input type="number" id="qty-input" value="1" min="1" max="100" aria-label="Jumlah">
+            <button type="button" id="qty-plus" aria-label="Tambah jumlah">+</button>
+          </div>
+          <button id="order-btn" type="button" class="bg-finance-blue hover:bg-finance-blue-deep text-white min-h-[44px] px-7 rounded-[14px] text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+            <span id="order-btn-text">Buat Pesanan</span>
+            <span id="order-btn-spinner" class="is-hidden otp-spin"><i class="fas fa-circle-notch"></i></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="is-hidden" id="order-result"></div>
+    </div>
+  </section>
+
+  <!-- Bantuan singkat, panduan cepat tanpa meninggalkan halaman pesan -->
+  <section class="mt-6">
+    <h2 class="text-[15px] font-extrabold text-slate-900 mb-3 flex items-center gap-2"><i class="fas fa-circle-question text-finance-blue"></i> Bantuan Singkat</h2>
+    <div class="bg-white rounded-[24px] border border-white shadow-soft p-5">
+      <div class="space-y-2">
+        <details class="group bg-slate-50 border border-slate-100 rounded-[14px] overflow-hidden">
+          <summary class="flex items-center justify-between gap-3 cursor-pointer list-none min-h-[44px] px-4 py-3 text-[12px] font-bold text-slate-700 hover:text-finance-blue"><span>Berapa lama nomor menerima SMS?</span><i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform group-open:rotate-180"></i></summary>
+          <p class="px-4 pb-4 text-[11px] text-slate-600 leading-relaxed">10 menit sejak pesanan dibuat. Jika tidak ada SMS sampai batas waktu, pesanan berakhir otomatis dan saldo dikembalikan penuh tanpa perlu tindakan apa pun.</p>
+        </details>
+        <details class="group bg-slate-50 border border-slate-100 rounded-[14px] overflow-hidden">
+          <summary class="flex items-center justify-between gap-3 cursor-pointer list-none min-h-[44px] px-4 py-3 text-[12px] font-bold text-slate-700 hover:text-finance-blue"><span>Bisakah membatalkan pesanan?</span><i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform group-open:rotate-180"></i></summary>
+          <p class="px-4 pb-4 text-[11px] text-slate-600 leading-relaxed">Ya, selama status masih Menunggu OTP dan belum ada SMS masuk. Setelah SMS diterima, pesanan tidak dapat dibatalkan dan saldo tidak dikembalikan.</p>
+        </details>
+        <details class="group bg-slate-50 border border-slate-100 rounded-[14px] overflow-hidden">
+          <summary class="flex items-center justify-between gap-3 cursor-pointer list-none min-h-[44px] px-4 py-3 text-[12px] font-bold text-slate-700 hover:text-finance-blue"><span>Kode tidak masuk, apa yang harus dilakukan?</span><i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform group-open:rotate-180"></i></summary>
+          <p class="px-4 pb-4 text-[11px] text-slate-600 leading-relaxed">Periksa kembali negara dan layanan yang dipilih, tunggu sekitar satu menit sebelum menekan Ulangi, lalu coba nomor lain bila perlu. Sampai batas 10 menit tanpa SMS, saldo kembali otomatis.</p>
+        </details>
+        <details class="group bg-slate-50 border border-slate-100 rounded-[14px] overflow-hidden">
+          <summary class="flex items-center justify-between gap-3 cursor-pointer list-none min-h-[44px] px-4 py-3 text-[12px] font-bold text-slate-700 hover:text-finance-blue"><span>Bisa memilih nomor sendiri?</span><i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform group-open:rotate-180"></i></summary>
+          <p class="px-4 pb-4 text-[11px] text-slate-600 leading-relaxed">Tidak. Nomor dialokasikan otomatis dari stok negara dan layanan pilihan Anda agar penerimaan kode optimal. Setiap nomor unik dan hanya dipakai untuk pesanan Anda selama masa sewa.</p>
+        </details>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-4">
+        <a href="/otp/orders" class="min-h-[44px] inline-flex items-center px-4 rounded-[14px] bg-pastel-blue text-finance-blue text-[11px] font-bold hover:bg-finance-blue hover:text-white transition-all">Riwayat Pesanan</a>
+        <a href="/deposit" class="min-h-[44px] inline-flex items-center px-4 rounded-[14px] bg-slate-50 border border-slate-100 text-slate-600 text-[11px] font-bold hover:text-finance-blue transition-all">Isi Saldo</a>
+        <a href="/" class="min-h-[44px] inline-flex items-center px-4 rounded-[14px] bg-slate-50 border border-slate-100 text-slate-600 text-[11px] font-bold hover:text-finance-blue transition-all">Beranda</a>
+      </div>
+    </div>
+  </section>
+
+</div>
+<div class="otp-toast" id="otpToast" role="status" aria-live="polite"><span id="otpToastText"></span></div>
+
+<script>
+(function () {
+'use strict';
+
+/* ================= util ================= */
+const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+const rp = amount => 'Rp ' + Number(amount || 0).toLocaleString('id-ID');
+const hue = text => [...String(text)].reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) >>> 0, 7) % 360;
+const letterPill = name => {
+  const h = hue(name);
+  return `<span class="otp-pill-letter" style="background:hsl(${h} 55% 92%);color:hsl(${h} 55% 32%)" aria-hidden="true">${esc(String(name || '?')[0] || '?').toUpperCase()}</span>`;
+};
+/* Logo brand (SVG lokal dari server) bila katalog menyediakannya; layanan yang
+   tidak punya logo resmi, bank, toko lokal, situs betting, tetap monogram. */
+const serviceMark = item => (item && item.icon)
+  ? `<img class="otp-pill-icon" src="${esc(item.icon)}" alt="" width="18" height="18" loading="lazy" decoding="async">`
+  : letterPill(item && item.name);
+const show = el => el.classList.remove('is-hidden');
+const hide = el => el.classList.add('is-hidden');
+const copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+
+let toastTimer = null;
+function toast(text) {
+  const box = document.getElementById('otpToast');
+  document.getElementById('otpToastText').textContent = text;
+  box.classList.add('is-show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => box.classList.remove('is-show'), 3200);
+}
+
+async function jsonFetch(url, options) {
+  const response = await fetch(url, options);
+  let payload = null;
+  try { payload = await response.json(); } catch (_) { /* respons bukan JSON */ }
+  return { ok: response.ok, payload };
+}
+
+function bindSearch(inputId) {
+  const input = document.getElementById(inputId);
+  const clear = input.parentElement.querySelector('.otp-search-clear');
+  input.addEventListener('input', () => {
+    clear.classList.toggle('is-hidden', !input.value);
+    renderPills();
+  });
+  clear.addEventListener('click', () => {
+    input.value = '';
+    clear.classList.add('is-hidden');
+    input.dispatchEvent(new Event('input'));
+    input.focus();
+  });
+  return input;
+}
+
+/* ================= state ================= */
+const serviceSearch = bindSearch('service-search');
+const countrySearch = bindSearch('country-search');
+const servicePills = document.getElementById('service-pills');
+const countryPills = document.getElementById('country-pills');
+const productsArea = document.getElementById('products-area');
+const productsGrid = document.getElementById('products-grid');
+const orderPanel = document.getElementById('order-panel');
+const orderSummary = document.getElementById('order-summary');
+const orderResult = document.getElementById('order-result');
+const orderBtn = document.getElementById('order-btn');
+/* Daftar harga (tangga harga) di panel pesanan, semua harga layanan ini,
+   termasuk yang stoknya habis. */
+const priceWrap = document.getElementById('price-wrap');
+const pricePills = document.getElementById('price-pills');
+const priceCount = document.getElementById('price-count');
+
+/* Pemilih operator (carrier), grup pills di antara Negara dan Produk, meniru
+   dashboard penyedia. Daftar diambil hanya untuk kombinasi layanan+negara;
+   bila penyedia tak punya pilihan (cuma "any") grup tetap tersembunyi dan
+   pesanan memakai carrier otomatis. Memilih operator MENGUBAH HARGA tiles,
+   jadi katalog dimuat ulang saat operator berganti. Gagal memuat daftar tidak
+   boleh menggagalkan panel pesanan. */
+const operatorGroup = document.getElementById('operator-group');
+const operatorPills = document.getElementById('operator-pills');
+const operatorCount = document.getElementById('operator-count');
+let OP = null;        // operator terpilih (null = any / belum dipilih)
+let operatorList = [];
+
+function resetOperators() {
+  OP = null;
+  operatorList = [];
+  operatorGroup.classList.add('is-hidden');
+  operatorPills.innerHTML = '';
+  operatorCount.textContent = '';
+}
+
+function renderOperators() {
+  operatorCount.textContent = operatorList.length ? `(${operatorList.length})` : '';
+  operatorPills.innerHTML = operatorList.map(item => {
+    const value = item.operator_id == null ? '' : String(item.operator_id);
+    const active = String(OP ?? '') === value;
+    return `<button type="button" class="otp-pill${active ? ' is-active' : ''}" role="option" aria-selected="${active}" data-operator="${esc(value)}">${esc(item.name)}</button>`;
+  }).join('');
+  operatorPills.querySelectorAll('.otp-pill').forEach(pill => pill.addEventListener('click', async () => {
+    const value = pill.dataset.operator;
+    if (String(OP ?? '') === value) return;
+    OP = value === '' ? null : value;
+    renderOperators();
+    // Harga & stok tiles mengikuti carrier terpilih (katalog menyaring produk
+    // per operator_id), tanpa ini user melihat harga "any" tapi didebit
+    // harga carrier lain.
+    await syncCatalog();
+  }));
+}
+
+async function loadOperators(seqNow) {
+  if (!F || !I) { resetOperators(); return; }
+  try {
+    const { ok, payload } = await jsonFetch(`/otp/operators?country=${encodeURIComponent(I)}&platform=${encodeURIComponent(F)}`);
+    if (seqNow != null && seqNow !== seq) return;   // pilihan user sudah berubah
+    if (!ok || !payload || !payload.success) { resetOperators(); return; }
+    const list = (payload.operators || []).filter(item => item && item.code);
+    // Tanpa pilihan nyata (hanya "any") → sembunyikan, biarkan otomatis.
+    if (!list.some(item => item.operator_id != null)) { resetOperators(); return; }
+    operatorList = list;
+    if (OP != null && !list.some(item => String(item.operator_id) === String(OP))) OP = null;
+    renderOperators();
+    operatorGroup.classList.remove('is-hidden');
+  } catch (_) {
+    if (seqNow == null || seqNow === seq) resetOperators();
+  }
+}
+
+let F = null;                                        // layanan/platform terpilih
+let I = <%- JSON.stringify(String(locals.defaultCountry || '')).replace(/</g, '\\u003c') %> || null; // negara terpilih (default akun)
+let servicesAll = [];
+let servicesView = [];
+let countriesAll = [];
+let countriesView = [];
+let tiles = [];
+let selectedTile = null;      // tile terpilih (membawa `tiers` = tangga harga)
+let selectedTier = null;      // harga yang dipilih user (null = default tile)
+let orderBusy = false;
+let seq = 0;
+
+async function fetchCatalog() {
+  const query = new URLSearchParams();
+  if (I) query.set('country', I);
+  if (F) query.set('platform', F);
+  // Operator terpilih ikut menyaring katalog → tiles menampilkan harga carrier
+  // itu (bukan harga termurah lintas carrier).
+  if (OP != null) query.set('operator', String(OP));
+  const { ok, payload } = await jsonFetch('/otp/catalog' + (query.toString() ? '?' + query : ''));
+  if (!ok || !payload || !payload.success) throw new Error((payload && payload.error) || 'Katalog tidak dapat dimuat.');
+  return payload;
+}
+
+/* ================= render pills ================= */
+function renderPills() {
+  const serviceQuery = serviceSearch.value.trim().toLowerCase();
+  const countryQuery = countrySearch.value.trim().toLowerCase();
+
+  const services = serviceQuery
+    ? servicesView.filter(item => String(item.name || '').toLowerCase().includes(serviceQuery))
+    : servicesView;
+  const countries = countryQuery
+    ? countriesView.filter(item => String(item.name || '').toLowerCase().includes(countryQuery) || String(item.code || '').toLowerCase().includes(countryQuery))
+    : countriesView;
+
+  document.getElementById('service-count').textContent =
+    servicesView.length < servicesAll.length ? `(${servicesView.length} dari ${servicesAll.length})` : (servicesView.length ? `(${servicesView.length})` : '');
+  document.getElementById('country-count').textContent =
+    countriesView.length < countriesAll.length ? `(${countriesView.length} dari ${countriesAll.length})` : (countriesView.length ? `(${countriesView.length})` : '');
+
+  if (!services.length) {
+    servicePills.innerHTML = '<div class="otp-placeholder">Layanan tidak ditemukan</div>';
+  } else {
+    servicePills.innerHTML = services.map(item => {
+      const active = String(item.code) === String(F);
+      return `<button type="button" class="otp-pill${active ? ' is-active' : ''}" role="option" aria-selected="${active}" data-id="${esc(item.code)}">${serviceMark(item)}${esc(item.name)}</button>`;
+    }).join('');
+    servicePills.querySelectorAll('.otp-pill').forEach(pill => pill.addEventListener('click', async () => {
+      F = (String(F) === String(pill.dataset.id)) ? null : pill.dataset.id;
+      renderPills();
+      await syncCatalog();
+    }));
+  }
+
+  if (!countries.length) {
+    countryPills.innerHTML = '<div class="otp-placeholder">Negara tidak ditemukan</div>';
+  } else {
+    countryPills.innerHTML = countries.map(item => {
+      const active = String(item.id) === String(I);
+      const emoji = item.emoji ? `<span class="otp-pill-emoji">${esc(item.emoji)}</span>` : '';
+      return `<button type="button" class="otp-pill${active ? ' is-active' : ''}" role="option" aria-selected="${active}" data-id="${esc(item.id)}">${emoji}${esc(item.name)}</button>`;
+    }).join('');
+    countryPills.querySelectorAll('.otp-pill').forEach(pill => pill.addEventListener('click', async () => {
+      I = (String(I) === String(pill.dataset.id)) ? null : pill.dataset.id;
+      renderPills();
+      await syncCatalog();
+    }));
+  }
+}
+
+/* ================= tangga harga & panel pesanan ================= */
+/* Tiap layanan punya BEBERAPA harga di penyedia, masing-masing dengan slot
+   stoknya sendiri, jadi saat harga termurah kosong pemesan bisa langsung
+   pindah harga lain alih-alih menemui pesanan yang ditolak. Katalog sengaja
+   hanya membawa JUMLAH harga (`tier_count`): tangga harga satu produk diambil
+   dari /otp/tiers saat produk itu dipilih, lalu di-cache per (negara, layanan,
+   operator). Kalau pengambilan ini gagal, panel tetap bisa dipakai dengan harga
+   default tile, daftar harga TIDAK boleh memblokir pembelian. */
+const tierCache = new Map();      // key → daftar harga (final, markup sudah masuk)
+const tierErrors = new Set();     // key yang gagal dimuat
+let tierLoading = false;
+
+function tierKey(tile, operator) {
+  return `${tile.country_id}:${tile.service_code}:${operator == null ? '' : operator}`;
+}
+function clearTiers() {
+  tierCache.clear();
+  tierErrors.clear();
+  tierLoading = false;
+}
+function tileTiers(tile, operator) {
+  if (!tile) return [];
+  const list = tierCache.get(tierKey(tile, operator)) || [];
+  return list.filter(item => item && item.product_id != null && Number.isFinite(Number(item.price)));
+}
+async function loadTiers(force) {
+  const tile = selectedTile;
+  if (!tile) return;
+  if ((Number(tile.tier_count) || 0) < 2) return;   // cuma satu harga: tak ada pilihan
+  const key = tierKey(tile, OP);
+  // `force` dipakai setelah pesanan ditolak penyedia (stok habis / harga
+  // berubah): cache harus dibuang, bukan dianggap masih berlaku, tanpa ini
+  // daftar harga yang tampil tetap yang lama dan pemesan memilih lagi harga
+  // yang sudah kosong.
+  if (!force && (tierCache.has(key) || tierErrors.has(key))) { renderPriceList(); return; }
+  if (force) tierErrors.delete(key);
+  tierLoading = true;
+  renderPriceList();
+  const query = new URLSearchParams({ country: String(tile.country_id), platform: String(tile.service_code) });
+  if (OP != null) query.set('operator', String(OP));
+  try {
+    const { ok, payload } = await jsonFetch('/otp/tiers?' + query.toString());
+    if (!ok || !payload || !payload.success || !Array.isArray(payload.tiers)) throw new Error((payload && payload.error) || 'Daftar harga tidak dapat dimuat.');
+    tierCache.set(key, payload.tiers);
+  } catch (_) {
+    tierErrors.add(key);
+  } finally {
+    tierLoading = false;
+    // Pilihan bisa sudah berubah saat respons tiba, jangan menggambar ulang
+    // panel yang bukan lagi milik permintaan ini.
+    if (selectedTile && tierKey(selectedTile, OP) === key) renderPriceList();
+  }
+}
+function activeTier() {
+  if (!selectedTile) return null;
+  const tiers = tileTiers(selectedTile, OP);
+  if (selectedTier && tiers.some(item => String(item.product_id) === String(selectedTier.product_id))) return selectedTier;
+  return tiers.find(item => String(item.product_id) === String(selectedTile.product_id)) || tiers[0] || null;
+}
+function activePrice() {
+  const tier = activeTier();
+  return tier ? Number(tier.price) : (Number(selectedTile && selectedTile.price) || 0);
+}
+function activeStock() {
+  const tier = activeTier();
+  return tier ? (Number(tier.stock) || 0) : (Number(selectedTile && selectedTile.stock) || 0);
+}
+function activeProductId() {
+  const tier = activeTier();
+  return tier ? tier.product_id : (selectedTile ? selectedTile.product_id : null);
+}
+
+function renderPriceList() {
+  if (!selectedTile || (Number(selectedTile.tier_count) || 0) < 2) {
+    hide(priceWrap); pricePills.innerHTML = ''; priceCount.textContent = '';
+    return;
+  }
+  const key = tierKey(selectedTile, OP);
+  const tiers = tileTiers(selectedTile, OP);
+  show(priceWrap);
+  if (tierLoading && !tiers.length) {
+    priceCount.textContent = '';
+    pricePills.innerHTML = '<div class="otp-placeholder"><i class="fas fa-circle-notch otp-spin"></i> Memuat harga...</div>';
+    return;
+  }
+  if (tierErrors.has(key)) {
+    priceCount.textContent = '';
+    pricePills.innerHTML = '<div class="otp-placeholder">Daftar harga lain tidak dapat dimuat. Harga ini tetap bisa dipesan.</div>';
+    return;
+  }
+  if (tiers.length < 2) { hide(priceWrap); pricePills.innerHTML = ''; priceCount.textContent = ''; return; }
+  const active = activeTier();
+  priceCount.textContent = `(${tiers.length})`;
+  pricePills.innerHTML = tiers.map(tier => {
+    const stock = Number(tier.stock) || 0;
+    const habis = stock < 1;
+    const isActive = active && String(active.product_id) === String(tier.product_id);
+    const operator = tier.operator ? `${esc(tier.operator)} ` : '';
+    return `<button type="button" class="otp-pill${isActive ? ' is-active' : ''}${habis ? ' is-disabled' : ''}" role="option" aria-selected="${isActive}" aria-disabled="${habis}"${habis ? ' disabled' : ''} data-product="${esc(String(tier.product_id))}">${operator}${rp(tier.price)}        <span class="otp-pill-stock">${habis ? 'stok habis' : stock.toLocaleString('id-ID') + ' tersedia'}</span></button>`;
+  }).join('');
+  pricePills.querySelectorAll('.otp-pill:not(.is-disabled)').forEach(pill => pill.addEventListener('click', () => {
+    const tier = tiers.find(item => String(item.product_id) === pill.dataset.product);
+    if (!tier) return;
+    selectedTier = tier;
+    renderPriceList();
+    renderOrderSummary();
+  }));
+  show(priceWrap);
+}
+
+function renderOrderSummary() {
+  if (!selectedTile) return;
+  const country = countriesView.concat(countriesAll).find(item => String(item.id) === String(selectedTile.country_id));
+  const countryLabel = country ? `${country.emoji ? esc(country.emoji) + ' ' : ''}${esc(country.name)}` : esc(selectedTile.country_id);
+  const tier = activeTier();
+  const operatorLabel = tier && tier.operator ? ` - ${esc(tier.operator)}` : '';
+  const habis = activeStock() < 1;
+  orderSummary.innerHTML = `<strong>${esc(selectedTile.label)}</strong> / ${countryLabel} @ ${rp(activePrice())}${operatorLabel}`
+    + (habis ? ' <span class="otp-order-habis">Stok habis, pilih harga lain</span>' : '');
+  syncOrderButton();
+}
+
+function renderOrderPanel() {
+  renderPriceList();
+  renderOrderSummary();
+  document.getElementById('qty-input').value = '1';
+  show(orderPanel);
+  hide(orderResult);
+  // Tangga harga menyusul (panel sudah tampil lebih dulu dengan harga default).
+  loadTiers();
+}
+
+/* ================= render produk & panel pesanan ================= */
+function renderTiles() {
+  if (!tiles.length) { hide(productsArea); hide(orderPanel); hide(priceWrap); selectedTile = null; selectedTier = null; return; }
+  document.getElementById('products-count').textContent = `(${tiles.length})`;
+  show(productsArea);
+  productsGrid.innerHTML = tiles.map(tile => `
+    <button type="button" class="otp-tile${selectedTile && selectedTile.key === tile.key ? ' is-active' : ''}" data-key="${esc(tile.key)}">
+      ${tile.icon ? `<img class="otp-tile-icon" src="${esc(tile.icon)}" alt="" width="22" height="22" loading="lazy" decoding="async">` : ''}
+      <span class="otp-tile-label">${esc(tile.label)}</span>
+      <span class="otp-tile-stock">${Number(tile.stock || 0).toLocaleString('id-ID')} stok</span>
+      <span class="otp-tile-price">${rp(tile.price)}</span>
+    </button>`).join('');
+  productsGrid.querySelectorAll('.otp-tile').forEach(tileEl => tileEl.addEventListener('click', () => {
+    const tile = tiles.find(item => item.key === tileEl.dataset.key);
+    if (!tile) return;
+    selectedTile = tile;
+    // Harga default = termurah ber-stok pada tile ini; daftar harga di panel
+    // membiarkan pemesan memilih harga lain bila perlu.
+    selectedTier = null;
+    renderTiles();
+    renderOrderPanel();
+  }));
+}
+
+function resetSelection() {
+  selectedTile = null;
+  selectedTier = null;
+  hide(priceWrap);
+  hide(orderPanel);
+}
+
+async function syncCatalog() {
+  const current = ++seq;
+  // Harga & stok bisa berubah antar pemuatan → tangga harga lama dibuang.
+  clearTiers();
+  resetSelection();
+  // Operator hanya berlaku untuk kombinasi layanan + negara; pilihan lama tidak
+  // boleh menempel ke kombinasi lain (harga salah sasaran).
+  if (!(F && I)) resetOperators();
+  const placeholder = F || I
+    ? '<div class="otp-placeholder"><i class="fas fa-circle-notch otp-spin"></i> Memuat...</div>'
+    : '<div class="otp-placeholder">Pilih layanan atau negara untuk melihat nomor</div>';
+  if (!F && !I) { hide(productsArea); productsGrid.innerHTML = ''; }
+  servicePills.innerHTML = placeholder;
+  try {
+    const payload = await fetchCatalog();
+    if (current !== seq) return;
+    servicesView = payload.services || [];
+    if (!F && !payload.country) servicesAll = servicesView;
+    countriesView = (!F && countriesAll.length) ? countriesAll : (payload.countries || []);
+    if (!F) countriesAll = countriesView;
+    tiles = payload.tiles || [];
+    renderPills();
+    renderTiles();
+    if (!F && !I) { hide(productsArea); hide(orderPanel); }
+    // Daftar carrier dimuat paralel dengan katalog (guard urutan sama).
+    if (F && I) loadOperators(current);
+  } catch (error) {
+    if (current !== seq) return;
+    servicePills.innerHTML = `<div class="otp-placeholder otp-error">${esc(error.message)}</div>`;
+    toast(error.message);
+  }
+}
+
+/* ================= jumlah & pesanan ================= */
+const qtyInput = document.getElementById('qty-input');
+const clampQty = () => {
+  let value = parseInt(qtyInput.value, 10);
+  if (isNaN(value) || value < 1) value = 1;
+  if (value > 100) value = 100;
+  qtyInput.value = String(value);
+  return value;
+};
+document.getElementById('qty-minus').addEventListener('click', () => { qtyInput.value = String(Math.max(1, clampQty() - 1)); });
+document.getElementById('qty-plus').addEventListener('click', () => { qtyInput.value = String(Math.min(100, clampQty() + 1)); });
+qtyInput.addEventListener('change', clampQty);
+
+function syncOrderButton() {
+  // Tombol mati saat sibuk ATAU harga terpilih sedang kosong, jangan biarkan
+  // user memesan harga yang sudah habis.
+  orderBtn.disabled = orderBusy || !selectedTile || activeStock() < 1;
+}
+function setOrderBusy(busy) {
+  orderBusy = busy;
+  syncOrderButton();
+  orderBtn.setAttribute('aria-busy', busy ? 'true' : 'false');
+  document.getElementById('order-btn-text').classList.toggle('is-hidden', busy);
+  document.getElementById('order-btn-spinner').classList.toggle('is-hidden', !busy);
+}
+
+// `reason` adalah kode penyebab dari server (stok_habis, harga_berubah, ...).
+// Ia dipakai untuk menentukan apakah daftar harga harus di-refresh, bukan
+// menebak dari isi pesan, yang bisa berubah sewaktu-waktu.
+// Penolakan kondisi → buang cache daftar harga dan muat ulang. Alasan di luar
+// daftar ini (batas laju, gangguan penyedia, saldo) tidak menyentuh katalog.
+function refreshTiersAfterRejection(reason) {
+  if (!['out_of_stock', 'price_changed', 'not_found'].includes(String(reason || ''))) return Promise.resolve();
+  const tile = selectedTile;
+  if (!tile) return Promise.resolve();
+  const key = tierKey(tile, OP);
+  tierCache.delete(key);
+  tierErrors.delete(key);
+  return loadTiers(true);
+}
+
+function renderOrderResult({ success, orders, failed, error, reason }) {
+  orderResult.className = 'otp-result ' + (success ? 'is-success' : 'is-error');
+  if (reason) orderResult.dataset.reason = reason; else delete orderResult.dataset.reason;
+  show(orderResult);
+  if (!success) {
+    const perluPerbaruan = ['out_of_stock', 'price_changed', 'not_found'].includes(reason);
+    orderResult.innerHTML = `
+      <div class="otp-result-header">
+        <i class="fas fa-circle-xmark" style="color:#c62828"></i>
+        <span class="otp-result-title">Pesanan Gagal</span>
+      </div>
+      <div class="otp-result-item"><span class="otp-ao-message">${esc(error || 'Pesanan tidak dapat dibuat.')}</span></div>
+      ${perluPerbaruan ? '<div class="otp-result-item"><span class="otp-ao-message">Daftar harga sedang diperbarui, silakan pilih harga lain.</span></div>' : ''}`;
+    return;
+  }
+  const items = (orders || []).map(order => {
+    const expires = order.expires_at_ms || null;
+    return `
+      <div class="otp-result-item">
+        <div class="otp-result-meta">
+          <span class="otp-result-label">Pesanan #${esc(String(order.id).slice(-8))}</span>
+          <span class="otp-result-badge">${esc(STATUS_LABEL[order.status] || order.status || 'aktif')}</span>
+          ${expires ? `<span class="otp-ao-timer otp-result-timer" data-expires="${new Date(expires).toISOString()}"></span>` : ''}
+        </div>
+        ${order.phoneNumber ? `<div class="otp-result-phone">
+          <span>${esc(order.phoneNumber)}</span>
+          <button class="otp-copy-btn" data-copy="${esc(order.phoneNumber)}" title="Salin nomor">${copyIcon}</button>
+        </div>` : ''}
+        <a href="/otp/orders" class="otp-result-link">Lihat pesanan <span>&rarr;</span></a>
+      </div>`;
+  }).join('');
+  orderResult.innerHTML = `
+    <div class="otp-result-header">
+      <i class="fas fa-circle-check" style="color:#0f7a52"></i>
+      <span class="otp-result-title">${orders && orders.length === 1 ? 'Pesanan Dibuat' : `${(orders || []).length} Pesanan Dibuat`}</span>
+      ${failed > 0 ? `<span class="otp-result-warn">${failed} gagal (dana dikembalikan)</span>` : ''}
+    </div>
+    ${items}`;
+  bindTimers(orderResult);
+  orderResult.querySelectorAll('.otp-copy-btn').forEach(btn => btn.addEventListener('click', () => copyText(btn.dataset.copy, btn)));
+}
+
+orderBtn.addEventListener('click', async () => {
+  if (!selectedTile) return;
+  const qty = clampQty();
+  // Transaksi di atas satu nomor wajib konfirmasi: salah klik qty besar bisa
+  // memotong saldo ratusan ribu seketika.
+  if (qty > 1 && !confirm(`Pesan ${qty} nomor ${selectedTile.label} sekaligus?\nTotal pemotongan saldo: ${rp(activePrice() * qty)}.`)) return;
+  setOrderBusy(true);
+  hide(orderResult);
+  try {
+    const { ok, payload } = await jsonFetch('/otp/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_code: selectedTile.service_code,
+        country_id: selectedTile.country_id,
+        // Carrier dipilih lewat grup pills Operator; kosong = Any (penyedia
+        // yang memilih). Tanpa pilihan pada kombinasi ini, grup disembunyikan.
+        operator_id: OP ?? '',
+        // HARGA yang dipilih. Ini mengunci tier eksak di penyedia, sehingga
+        // harga yang ditagih = harga yang tampil. Bila tier itu kosong, server
+        // menolak pesanan dan mengembalikan saldo, TIDAK ada percobaan harga
+        // lain secara diam-diam; daftar harga di bawah di-refresh dan pemesan
+        // yang memilih langkah berikutnya.
+        product_id: activeProductId() != null ? String(activeProductId()) : '',
+        // Harga yang sedang tampil di layar, server menolak pesanan bila harga
+        // segar lebih tinggi (katalog bisa berumur 10 menit), supaya user tidak
+        // dibilang "Saldo tidak cukup" padahal angka di layar masih kurang.
+        quoted_price: Number(activePrice()) || 0,
+        qty
+      })
+    });
+    if (!ok || !payload || !payload.success) {
+      const gagal = new Error((payload && payload.error) || 'Pesanan tidak dapat dibuat.');
+      gagal.reason = (payload && payload.reason) || null;
+      throw gagal;
+    }
+    let total = 0;
+    let createdCount = 0;
+    if (qty > 1 && payload.order && Array.isArray(payload.order.orders)) {
+      const created = payload.order.orders.filter(item => item.ok !== false);
+      const gagal = payload.order.orders.filter(item => item.ok === false);
+      // Penolakan kondisi (stok habis / harga berubah) berlaku untuk seluruh
+      // antrean, server berhenti di nomor pertama, jadi daftar harga ikut
+      // diperbarui, apa pun hasil akhir antreannya.
+      const alasan = payload.order.orders.map(item => item && item.reason).find(Boolean);
+      refreshTiersAfterRejection(alasan);
+      if (created.length === 0) {
+        const pertama = gagal[0] || {};
+        renderOrderResult({ success: false, error: pertama.error || 'Pesanan tidak dapat dibuat.', reason: pertama.reason || null });
+        return;   // tidak ada yang jadi dibuat → saldo tak tersentuh sama sekali
+      }
+      createdCount = created.length;
+      total = created.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+      renderOrderResult({ success: true, orders: created, failed: payload.failed || 0 });
+    } else if (payload.order) {
+      createdCount = 1;
+      total = Number(payload.order.amount) || 0;
+      renderOrderResult({ success: true, orders: [payload.order], failed: 0 });
+    } else {
+      renderOrderResult({ success: true, orders: [], failed: 0 });
+    }
+    updateBalance(-total);
+    // duplicate:true = pesanan lama yang dikembalikan, saldo tak terpotong →
+    // hitung pesanan tidak boleh ikut naik.
+    if (!payload.duplicate) bumpOrdersKpi(createdCount);
+    refreshActiveOrders();
+  } catch (error) {
+    renderOrderResult({ success: false, error: error.message, reason: error.reason || null });
+    // Penolakan yang bersifat kondisi (stok habis / harga berubah / tier hilang
+    // dari katalog) = cache di klien sudah basi. Muat ulang sekarang juga supaya
+    // angka di layar dan daftar harga langsung menunjukkan stok & harga segar
+    // sebelum pemesan mencoba lagi. Alasan dikirim server (`reason`), bukan
+    // ditebak dari teks pesan.
+    await refreshTiersAfterRejection(error.reason || null);
+  } finally {
+    setOrderBusy(false);
+  }
+});
+
+/* Saldo & kartu Aktif diperbarui langsung di klien: order baru memotong
+   saldo, refund/penutupan pesanan mengembalikannya, tanpa perlu reload. */
+const kpiBalanceEl = document.getElementById('kpi-balance');
+let kpiBalance = Number(String(kpiBalanceEl ? kpiBalanceEl.textContent : '').replace(/[^0-9]/g, '')) || 0;
+// Penulis tunggal angka saldo di layar. Dua sumber: optimisme klien (order
+// memotong, refund mengembalikan) dan KEBENARAN server dari /otp/active yang
+// disegarkan tiap 5 detik, angka basi selalu tertimpa oleh angka server.
+function setKpiBalance(value) {
+  kpiBalance = Math.max(0, Number(value) || 0);
+  if (kpiBalanceEl) kpiBalanceEl.textContent = 'Rp ' + kpiBalance.toLocaleString('id-ID');
+}
+function updateBalance(delta) {
+  setKpiBalance(kpiBalance + delta);
+}
+const kpiActiveEl = document.getElementById('kpi-active');
+const kpiOrdersEl = document.getElementById('kpi-orders');
+// Hitung pesanan di KPI ikut naik begitu pesanan dibuat, angka "Pesanan"
+// tidak perlu menunggu reload halaman.
+function bumpOrdersKpi(count) {
+  if (!kpiOrdersEl || !count) return;
+  const current = Number(String(kpiOrdersEl.textContent).replace(/[^0-9]/g, '')) || 0;
+  kpiOrdersEl.textContent = String(current + count);
+}
+
+/* ================= salin & hitung mundur ================= */
+function copyText(text, button) {
+  const done = () => {
+    if (!button) return;
+    button.classList.add('is-copied');
+    setTimeout(() => button.classList.remove('is-copied'), 1200);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, () => {});
+  } else {
+    const area = document.createElement('textarea');
+    area.value = text; document.body.appendChild(area); area.select();
+    try { document.execCommand('copy'); done(); } catch (_) { /* abaikan */ }
+    area.remove();
+  }
+}
+
+function tickTimers(root) {
+  (root || document).querySelectorAll('[data-expires]').forEach(el => {
+    const remaining = Date.parse(el.dataset.expires) - Date.now();
+    if (!Number.isFinite(remaining)) return;
+    if (remaining <= 0) { el.textContent = 'berakhir'; el.classList.remove('timer-warn', 'timer-urgent'); el.classList.add('timer-expired'); return; }
+    const total = Math.floor(remaining / 1000);
+    el.textContent = `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+    el.classList.remove('timer-warn', 'timer-urgent', 'timer-expired');
+    if (total <= 30) el.classList.add('timer-urgent');
+    else if (total <= 90) el.classList.add('timer-warn');
+  });
+}
+function bindTimers(root) { tickTimers(root); }
+setInterval(() => tickTimers(document), 1000);
+
+/* ================= pesanan aktif ================= */
+const STATUS_LABEL = { active: 'Menunggu OTP', received: 'OTP diterima', submitting: 'Mengirim', expired: 'Berakhir tanpa kode', cancelled: 'Dibatalkan', failed: 'Gagal' };
+const ACTION_ICONS = {
+  finish: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  resend: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+  cancel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>',
+  replace: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>'
+};
+
+const aoSection = document.getElementById('aoSection');
+const aoGrid = document.getElementById('aoGrid');
+const aoCount = document.getElementById('aoCount');
+
+function activeOrderCard(order) {
+  const received = order.status === 'received' || Boolean(order.otp);
+  const phone = order.phone_number || '';
+  const otpValue = order.otp || '';
+  const message = order.otp_message || '';
+  const cancelHint = received ? 'Tidak bisa dibatalkan setelah SMS diterima' : 'Batalkan pesanan dan kembalikan saldo';
+  // Penangguhan penyedia (docs): cancel/resend boleh baru dieksekusi setelah
+  // *available_at. Sama seperti dashboard penyedia: tombol nonaktif + hitung
+  // mundur, lalu menyala otomatis saat jendela lewat.
+  const active = order.status === 'active';
+  const nowMs = Date.now();
+  const resendUntil = active && !received && order.resend_available_at ? Number(order.resend_available_at) : 0;
+  const cancelUntil = active && !received && order.cancel_available_at ? Number(order.cancel_available_at) : 0;
+  const resendReady = Boolean(order.can_resend) || (resendUntil > 0 && nowMs >= resendUntil);
+  const cancelReady = Boolean(order.can_cancel) || (cancelUntil > 0 && nowMs >= cancelUntil);
+  // Ganti nomor memakai kapabilitasnya sendiri (OpenAPI: can_replace ==
+  // can_cancel, replace_available_at == cancel_available_at), bila penyedia
+  // tidak mengirimnya, jatuh ke kesiapan cancel yang memang identik.
+  const replaceReady = Boolean(order.can_replace) || cancelReady;
+  const resendGate = resendUntil > nowMs ? resendUntil : 0;
+  const cancelGate = cancelUntil > nowMs ? cancelUntil : 0;
+  const gateTitle = until => {
+    const s = Math.max(0, Math.ceil((until - nowMs) / 1000));
+    return `Tersedia dalam ${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  };
+  const resendAttrs = resendGate ? `data-gate-until="${resendGate}" title="${gateTitle(resendGate)}" disabled`
+    : `title="${resendReady ? 'Minta SMS dikirim ulang' : 'Tersedia selama menunggu SMS pertama'}" ${resendReady ? '' : 'disabled'}`;
+  const cancelAttrs = cancelGate ? `data-gate-until="${cancelGate}" title="${gateTitle(cancelGate)}" disabled`
+    : `title="${cancelHint}" ${cancelReady ? '' : 'disabled'}`;
+  return `
+    <div class="otp-ao-card" data-order-id="${esc(order.id)}">
+      <div class="otp-ao-head">
+        <a href="/otp/orders" class="otp-ao-id">#${esc(String(order.id).slice(-8))}</a>
+        <span class="otp-ao-badge ${received ? 'badge-done' : 'badge-wait'}">${esc(STATUS_LABEL[order.status] || order.status)}</span>
+        ${order.service_name ? `<span class="otp-ao-service">${esc(order.service_name)}${order.country_name ? ' ' + esc(order.country_name) : ''}</span>` : ''}
+        ${order.expires_at ? `<span class="otp-ao-timer" data-expires="${esc(order.expires_at)}"></span>` : ''}
+      </div>
+      <div class="otp-ao-body">
+        <div class="otp-ao-field">
+          <span class="otp-ao-label">Nomor</span>
+          <div class="otp-ao-value">
+            <span class="otp-ao-phone">${phone ? esc(phone) : 'Menunggu...'}</span>
+            ${phone ? `<button type="button" class="otp-copy-btn" data-copy="${esc(phone)}" aria-label="Salin nomor">${copyIcon}</button>` : ''}
+          </div>
+        </div>
+        <div class="otp-ao-field">
+          <span class="otp-ao-label">OTP Terakhir</span>
+          <div class="otp-ao-value">
+            ${otpValue ? `<span class="otp-ao-otp">${esc(otpValue)}</span><button type="button" class="otp-copy-btn" data-copy="${esc(otpValue)}" aria-label="Salin OTP">${copyIcon}</button>`
+              : `<span class="otp-ao-waiting">${message ? esc(message.slice(0, 120)) : 'Menunggu SMS...'}</span>`}
+          </div>
+        </div>
+        ${message && otpValue ? `<div class="otp-ao-field"><span class="otp-ao-label">SMS Terakhir</span><span class="otp-ao-message">${esc(message)}</span></div>` : ''}
+      </div>
+      <div class="otp-ao-actions">
+        <button type="button" class="otp-ao-btn otp-ao-finish" data-action="finish" title="${received ? 'Tandai pesanan selesai' : 'Tersedia setelah SMS diterima'}" ${order.can_finish ? '' : 'disabled'}>${ACTION_ICONS.finish} Selesai</button>
+        <button type="button" class="otp-ao-btn otp-ao-resend" data-action="resend" ${resendAttrs}>${ACTION_ICONS.resend} Ulangi</button>
+        <button type="button" class="otp-ao-btn otp-ao-cancel" data-action="cancel" ${cancelAttrs}>${ACTION_ICONS.cancel} Batalkan</button>
+        <button type="button" class="otp-ao-btn otp-ao-replace" data-action="replace" title="${cancelHint}" ${replaceReady ? '' : 'disabled'}>${ACTION_ICONS.replace} Ganti</button>
+      </div>
+    </div>`;
+}
+
+async function refreshActiveOrders() {
+  try {
+    const { ok, payload } = await jsonFetch('/otp/active');
+    if (!ok || !payload || !payload.success) return;
+    const orders = payload.orders || [];
+    aoCount.textContent = String(orders.length);
+    aoSection.classList.toggle('is-hidden', orders.length === 0);
+    if (kpiActiveEl) kpiActiveEl.textContent = String(orders.length);
+    // Saldo segar dari server → KPI tidak pernah tertinggal (refund/pembatalan
+    // di tab lain, pesanan paralel, atau top-up yang baru masuk).
+    if (payload.balance != null) setKpiBalance(payload.balance);
+    const seen = new Set(orders.map(order => order.id));
+    aoGrid.querySelectorAll('.otp-ao-card').forEach(card => { if (!seen.has(card.dataset.orderId)) card.remove(); });
+    for (const order of orders) {
+      const sig = JSON.stringify(order);
+      let card = aoGrid.querySelector(`[data-order-id="${order.id}"]`);
+      if (!card) {
+        aoGrid.insertAdjacentHTML('afterbegin', activeOrderCard(order));
+        card = aoGrid.querySelector(`[data-order-id="${order.id}"]`);
+        bindCardActions(card);
+        card.querySelectorAll('.otp-copy-btn').forEach(btn => btn.addEventListener('click', () => copyText(btn.dataset.copy, btn)));
+        bindTimers(card);
+        card.dataset.sig = sig;
+      } else if (card.dataset.sig !== sig && !card.classList.contains('is-removing')) {
+        // Data berubah (OTP masuk, kapabilitas/penangguhan berubah) → render
+        // ulang di tempat. Tanpa ini kartu yang sudah tampil tetap memperlihat
+        // "Menunggu SMS..." sampai halaman dimuat ulang.
+        const tpl = document.createElement('template');
+        tpl.innerHTML = activeOrderCard(order);
+        const next = tpl.content.firstElementChild;
+        card.replaceWith(next);
+        bindCardActions(next);
+        next.querySelectorAll('.otp-copy-btn').forEach(btn => btn.addEventListener('click', () => copyText(btn.dataset.copy, btn)));
+        bindTimers(next);
+        next.dataset.sig = sig;
+      }
+    }
+  } catch (_) { /* polling tidak boleh menampilkan error ke user */ }
+}
+
+function flashAction(button, state) {
+  button.classList.remove('is-ok', 'is-err');
+  if (state) button.classList.add(state);
+  setTimeout(() => button.classList.remove('is-ok', 'is-err'), 1600);
+}
+
+// Aktivasi otomatis tombol yang ditahan penangguhan penyedia, mirror
+// dashboard penyedia: sampai batas *available_at judul berisi hitung mundur,
+// lewat batas tombol menyala tanpa perlu reload.
+setInterval(() => {
+  const now = Date.now();
+  document.querySelectorAll('.otp-ao-btn[data-gate-until]').forEach(btn => {
+    const until = Number(btn.dataset.gateUntil);
+    if (now < until) {
+      const s = Math.max(0, Math.ceil((until - now) / 1000));
+      btn.title = `Tersedia dalam ${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+      return;
+    }
+    btn.removeAttribute('data-gate-until');
+    btn.disabled = false;
+    btn.title = btn.dataset.action === 'resend' ? 'Minta SMS dikirim ulang' : 'Batalkan pesanan dan kembalikan saldo';
+  });
+}, 1000);
+
+function bindCardActions(card) {
+  const orderId = card.dataset.orderId;
+  card.querySelectorAll('.otp-ao-btn').forEach(button => {
+    button.addEventListener('click', async () => {
+      const action = button.dataset.action;
+      if (action === 'cancel' && !confirm('Batalkan pesanan ini dan kembalikan saldonya?')) return;
+      if (action === 'replace' && !confirm('Batalkan pesanan ini dan pesan ulang layanan yang sama?')) return;
+      button.classList.add('is-loading');
+      try {
+        const { ok, payload } = await jsonFetch(`/otp/orders/${encodeURIComponent(orderId)}/${action}`, { method: 'POST' });
+        if (!ok || !payload || !payload.success) throw new Error((payload && payload.error) || 'Permintaan gagal.');
+        flashAction(button, 'is-ok');
+        if (action === 'cancel' || action === 'replace' || action === 'finish') {
+          card.classList.add('is-removing');
+          setTimeout(() => card.remove(), 400);
+        }
+        if (action === 'replace') toast('Pesanan diganti, saldo lama sudah dikembalikan.');
+        // Kontrak penyedia: `resent:false` = platform tidak mendukung SMS
+        // ulang. Jangan memberi tahu user "dikirim" padahal tidak ada apa-apa.
+        if (action === 'resend') toast(payload.resent === false
+          ? 'Platform ini tidak mendukung pengiriman ulang SMS.'
+          : 'Permintaan SMS ulang dikirim.');
+        setTimeout(refreshActiveOrders, 700);
+      } catch (error) {
+        flashAction(button, 'is-err');
+        toast(error.message);
+      } finally {
+        button.classList.remove('is-loading');
+      }
+    });
+  });
+}
+
+/* ================= grafik ================= */
+function drawChart(canvas, labels, values, color, money) {
+  const wrap = canvas.parentElement;
+  const hasData = values.some(value => value > 0);
+  if (!hasData) {
+    wrap.innerHTML = '<div class="otp-chart-empty"><i class="fas fa-chart-line text-2xl"></i> Belum ada data</div>';
+    return;
+  }
+  const ratio = window.devicePixelRatio || 1;
+  const width = wrap.clientWidth, height = wrap.clientHeight;
+  canvas.width = width * ratio; canvas.height = height * ratio;
+  canvas.style.width = width + 'px'; canvas.style.height = height + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(ratio, ratio);
+  const pad = { top: 10, right: 8, bottom: 24, left: 44 };
+  const plotW = width - pad.left - pad.right, plotH = height - pad.top - pad.bottom;
+  const max = Math.max(...values, 1);
+  ctx.font = '10px "IBM Plex Sans", system-ui, sans-serif';
+  ctx.strokeStyle = '#eef2f7'; ctx.fillStyle = '#94a3b8'; ctx.lineWidth = 1;
+  for (let step = 0; step <= 3; step++) {
+    const y = pad.top + (plotH / 3) * step;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(width - pad.right, y); ctx.stroke();
+    const value = Math.round(max - (max / 3) * step);
+    ctx.fillText(money && value >= 1000 ? (value / 1000) + 'k' : String(value), 4, y + 3);
+  }
+  ctx.fillStyle = '#94a3b8'; ctx.textAlign = 'center';
+  // Label sumbu ditipiskan (maks ±7 titik), 30 titik harian akan saling
+  // menimpa bila setiap tanggal digambar, persis dashboard penyedia.
+  const labelEvery = Math.max(1, Math.ceil(labels.length / 6));
+  const lastIndex = labels.length - 1;
+  labels.forEach((label, index) => {
+    const tampil = index % labelEvery === 0
+      || (index === lastIndex && lastIndex % labelEvery >= Math.ceil(labelEvery / 2));
+    if (!tampil) return;
+    const x = pad.left + (plotW / Math.max(1, labels.length - 1)) * index;
+    ctx.fillText(label, x, height - 8);
+  });
+  const points = values.map((value, index) => ({
+    x: pad.left + (plotW / Math.max(1, values.length - 1)) * index,
+    y: pad.top + plotH - (value / max) * plotH
+  }));
+  const gradient = ctx.createLinearGradient(0, pad.top, 0, pad.top + plotH);
+  gradient.addColorStop(0, color + '33'); gradient.addColorStop(1, color + '00');
+  ctx.beginPath();
+  points.forEach((point, index) => index ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y));
+  ctx.lineTo(points[points.length - 1].x, pad.top + plotH);
+  ctx.lineTo(points[0].x, pad.top + plotH);
+  ctx.closePath(); ctx.fillStyle = gradient; ctx.fill();
+  ctx.beginPath();
+  points.forEach((point, index) => index ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y));
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+  points.forEach(point => {
+    ctx.beginPath(); ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+  });
+}
+
+const trend = <%- JSON.stringify(locals.otpTrend || { labels: [], orders: [], spending: [] }).replace(/</g, '\\u003c') %>;
+function renderCharts() {
+  const ordersCanvas = document.getElementById('chart-orders');
+  const spendingCanvas = document.getElementById('chart-spending');
+  if (!ordersCanvas || !ordersCanvas.parentElement || !spendingCanvas || !spendingCanvas.parentElement) return;
+  if (!trend.labels || !trend.labels.length) {
+    ordersCanvas.parentElement.innerHTML = '<div class="otp-chart-empty"><i class="fas fa-chart-line text-2xl"></i> Belum ada data</div>';
+    spendingCanvas.parentElement.innerHTML = '<div class="otp-chart-empty"><i class="fas fa-chart-line text-2xl"></i> Belum ada data</div>';
+    return;
+  }
+  drawChart(ordersCanvas, trend.labels, trend.orders, '#4f8de8', false);
+  drawChart(spendingCanvas, trend.labels, trend.spending, '#c62828', true);
+}
+window.addEventListener('resize', () => { clearTimeout(window.__otpChartRT); window.__otpChartRT = setTimeout(renderCharts, 200); });
+
+/* ================= boot ================= */
+// Pilihan layanan/negara hanya hidup di memori halaman, tanpa penyimpanan lokal.
+function saveSelection() {}
+function loadSelection() {}
+
+async function boot() {
+  renderCharts();
+  loadSelection();
+  servicePills.innerHTML = '<div class="otp-placeholder"><i class="fas fa-circle-notch otp-spin"></i> Memuat layanan...</div>';
+  countryPills.innerHTML = '<div class="otp-placeholder"><i class="fas fa-circle-notch otp-spin"></i> Memuat negara...</div>';
+  // Katalog global (pills lengkap) & katalog terpilih dimuat paralel. Bila
+  // provider sesaat gangguan (504/timeout), coba ulang 1×, pengunjung tidak
+  // perlu tahu detail gangguan.
+  let globalCatalog = null, currentCatalog = null;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      [globalCatalog, currentCatalog] = await Promise.all([
+        fetch('/otp/catalog').then(r => r.json()).catch(() => null),
+        fetchCatalog().catch(() => null)
+      ]);
+      if ((globalCatalog && globalCatalog.success) || (currentCatalog && currentCatalog.success)) break;
+    } catch (_) { /* ulang */ }
+    if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 1500));
+  }
+  if (globalCatalog && globalCatalog.success) {
+    servicesAll = globalCatalog.services || [];
+    countriesAll = globalCatalog.countries || [];
+  }
+  if (currentCatalog && currentCatalog.success) {
+    servicesView = currentCatalog.services || [];
+    countriesView = (!F && countriesAll.length) ? countriesAll : (currentCatalog.countries || []);
+    tiles = currentCatalog.tiles || [];
+    if (!F && !currentCatalog.country) servicesAll = servicesView;
+  }
+  // Pilihan tersimpan yang tidak ada di katalog dilepas, jangan biarkan
+  // halaman terbuka tanpa tiles karena praseleksi yang sudah basi.
+  if (F && !servicesView.some(item => String(item.code) === String(F))) F = null;
+  if (I && !countriesView.some(item => String(item.id) === String(I))) I = null;
+  renderPills();
+  renderTiles();
+  if (F || I) syncCatalog();
+  refreshActiveOrders();
+  setInterval(refreshActiveOrders, 5000);
+}
+document.addEventListener('click', event => {
+  const pill = event.target.closest('.otp-pill');
+  if (pill) saveSelection();
+});
+boot();
+})();
+</script>
+<%- include('../partials/footer')%>

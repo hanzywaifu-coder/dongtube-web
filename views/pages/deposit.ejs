@@ -1,0 +1,568 @@
+<%- include('../partials/header', { title: 'Deposit & Riwayat' })%>
+
+<style>
+  .custom-scroll::-webkit-scrollbar { width: 6px; }
+  .custom-scroll::-webkit-scrollbar-track { background: transparent; margin-top: 10px; margin-bottom: 10px; }
+  .custom-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+  .custom-scroll:hover::-webkit-scrollbar-thumb { background-color: #94a3b8; }
+</style>
+
+<div class="page-wrap max-w-[480px] md:max-w-lg mx-auto">
+  <%- include('../partials/page_hero', { heroTitle:'Isi Saldo', heroSubtitle:'Top up saldo lewat QRIS, masuk otomatis.', heroIcon:'fa-wallet' })%>
+  <% if (typeof error !== 'undefined' && error) {%>
+    <div class="bg-rose-50 border border-rose-100 text-finance-red px-5 py-4 rounded-[20px] mb-8 text-xs font-semibold flex items-center gap-3">
+      <div class="w-8 h-8 rounded-[12px] bg-rose-100 flex items-center justify-center shrink-0">
+        <i class="fas fa-exclamation-circle text-xs"></i>
+      </div>
+      <p><%= error%></p>
+    </div>
+  <% }%>
+
+  <div class="reveal bg-white rounded-[24px] shadow-soft border border-white p-6 mt-4">
+    <div class="flex items-center gap-3.5 mb-5">
+      <div class="w-12 h-12 rounded-[16px] bg-gradient-to-br from-finance-blue to-finance-blue-deep text-white flex items-center justify-center shadow-soft">
+        <i class="fas fa-wallet text-sm"></i>
+      </div>
+      <div>
+        <h2 class="text-base font-bold text-slate-900">Isi Saldo</h2>
+        <p class="text-[11px] font-medium text-slate-400">Buat invoice QRIS instan</p>
+      </div>
+    </div>
+
+    <form id="invoiceForm" class="flex flex-col gap-4">
+      <div class="w-full">
+        <label for="amountInput" class="block text-xs font-semibold text-slate-700 mb-2 px-1">Nominal (Min. Rp <%= minDeposit.toLocaleString('id-ID')%>)</label>
+        <div class="flex items-center bg-slate-50 border border-white rounded-[16px] p-1.5 transition-all focus-within:border-finance-blue focus-within:ring-1 focus-within:ring-finance-blue">
+          <input type="hidden" id="rawAmountInput" name="amount" required>
+          <input id="amountInput" type="text" inputmode="numeric" aria-label="Nominal invoice" class="flex-1 bg-transparent px-3 py-3 text-xs font-semibold text-slate-800 outline-none w-full" placeholder="<%= minDeposit.toLocaleString('id-ID')%>" required>
+        </div>
+        <p id="amountError" class="text-xs font-semibold text-finance-red mt-1.5 px-1 hidden"></p>
+      </div>
+
+      <div class="w-full mt-1">
+        <label class="block text-xs font-semibold text-slate-700 mb-2 px-1">Pilih Nominal Cepat</label>
+        <div class="grid grid-cols-3 gap-2.5">
+          <button type="button" class="quick-nominal-btn bg-slate-50 border border-white text-slate-700 hover:text-finance-blue hover:border-finance-blue hover:bg-pastel-blue rounded-[14px] min-h-[44px] px-2 text-xs font-semibold transition-colors" data-amount="10000">10.000</button>
+          <button type="button" class="quick-nominal-btn bg-slate-50 border border-white text-slate-700 hover:text-finance-blue hover:border-finance-blue hover:bg-pastel-blue rounded-[14px] min-h-[44px] px-2 text-xs font-semibold transition-colors" data-amount="20000">20.000</button>
+          <button type="button" class="quick-nominal-btn bg-slate-50 border border-white text-slate-700 hover:text-finance-blue hover:border-finance-blue hover:bg-pastel-blue rounded-[14px] min-h-[44px] px-2 text-xs font-semibold transition-colors" data-amount="50000">50.000</button>
+          <button type="button" class="quick-nominal-btn bg-slate-50 border border-white text-slate-700 hover:text-finance-blue hover:border-finance-blue hover:bg-pastel-blue rounded-[14px] min-h-[44px] px-2 text-xs font-semibold transition-colors" data-amount="100000">100.000</button>
+          <button type="button" class="quick-nominal-btn bg-slate-50 border border-white text-slate-700 hover:text-finance-blue hover:border-finance-blue hover:bg-pastel-blue rounded-[14px] min-h-[44px] px-2 text-xs font-semibold transition-colors" data-amount="250000">250.000</button>
+          <button type="button" class="quick-nominal-btn bg-slate-50 border border-white text-slate-700 hover:text-finance-blue hover:border-finance-blue hover:bg-pastel-blue rounded-[14px] min-h-[44px] px-2 text-xs font-semibold transition-colors" data-amount="500000">500.000</button>
+        </div>
+      </div>
+
+      <button id="submitBtn" type="submit" class="bg-finance-blue text-white w-full py-4 rounded-[16px] text-sm font-bold shadow-soft-lg transition-all duration-700 ease-spring hover:-translate-y-0.5 active:scale-[0.99] flex items-center justify-center gap-2 mt-3 disabled:opacity-60 disabled:cursor-not-allowed">
+        <i id="btnIcon" class="fas fa-wallet text-xs"></i>
+        <span id="btnText">Buat Invoice</span>
+        <i id="btnSpinner" class="fas fa-spinner fa-spin text-xs hidden"></i>
+      </button>
+    </form>
+  </div>    <div class="mt-10 mb-8">
+      <div class="flex items-center justify-between mb-4 px-1 relative z-20" id="filterDropdownContainer">
+        <h3 class="text-sm font-semibold text-slate-800">Riwayat Transaksi</h3>
+
+        <div class="relative">
+        <button type="button" onclick="toggleFilterMenu()" class="flex items-center gap-2 bg-white border border-gray-200 hover:border-slate-300 hover:bg-slate-50 text-gray-700 px-4 min-h-[44px] rounded-xl text-xs font-semibold shadow-sm transition-colors">
+          <i class="fas fa-filter text-gray-700"></i>
+          <span id="activeFilterText">Semua</span>
+          <i class="fas fa-chevron-down text-[10px] text-gray-700 ml-1"></i>
+        </button>
+
+        <div id="filterMenu" class="absolute right-0 mt-2 w-44 bg-white border border-gray-100 rounded-2xl shadow-lg shadow-gray-200/60 py-2 hidden origin-top-right transition-all">
+          <button type="button" onclick="selectFilter('all','Semua')" class="filter-option w-full text-left px-4 py-2.5 text-xs font-semibold flex items-center justify-between text-finance-blue bg-slate-100/70 hover:bg-slate-50 transition-colors" data-val="all">Semua <i class="fas fa-check text-finance-blue check-icon"></i></button>
+          <button type="button" onclick="selectFilter('paid','Berhasil')" class="filter-option w-full text-left px-4 py-2.5 text-xs font-semibold flex items-center justify-between text-gray-600 hover:bg-gray-50 transition-colors" data-val="paid">Berhasil <i class="fas fa-check text-finance-blue check-icon hidden"></i></button>
+          <button type="button" onclick="selectFilter('pending','Pending')" class="filter-option w-full text-left px-4 py-2.5 text-xs font-semibold flex items-center justify-between text-gray-600 hover:bg-gray-50 transition-colors" data-val="pending">Pending <i class="fas fa-check text-finance-blue check-icon hidden"></i></button>
+          <button type="button" onclick="selectFilter('failed','Gagal')" class="filter-option w-full text-left px-4 py-2.5 text-xs font-semibold flex items-center justify-between text-gray-600 hover:bg-gray-50 transition-colors" data-val="failed">Gagal <i class="fas fa-check text-finance-blue check-icon hidden"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div id="recentTrxContainer" class="bg-white rounded-[24px] shadow-soft border border-white max-h-[400px] overflow-y-auto custom-scroll">
+      <% if (invoices.length === 0) {%>
+        <div id="emptyTrxState" class="py-12 text-center flex flex-col items-center justify-center">
+          <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-3"><i class="fas fa-receipt text-2xl text-slate-300"></i></div>
+          <p class="text-sm font-semibold text-slate-600">Belum ada transaksi</p>
+          <p class="text-xs text-slate-400 mt-1">Riwayat akan muncul di sini</p>
+        </div>
+      <% } else {%>
+        <% invoices.forEach((t, index) => {
+             let isDeposit = true;
+             let nominalAsli = Math.abs(t.amount);
+             let totalKeseluruhan = nominalAsli + (t.fee || 0);
+             let formattedDate = new Intl.DateTimeFormat('id-ID', { timeZone:'Asia/Jakarta', weekday:'long', day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:false }).format(new Date(t.createdAt)).replace(/\./g, ':') + ' WIB';
+             let statusClass = '';
+             if (t.status === 'paid' || t.status === 'success') statusClass = 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100';
+             else if (t.status === 'expired' || t.status === 'rejected') statusClass = 'bg-rose-50 text-rose-600 ring-1 ring-rose-100';
+             else statusClass = 'bg-amber-50 text-amber-600 ring-1 ring-amber-100';
+             let isLast = index === invoices.length - 1;
+%>
+          <div class="trx-item flex items-center justify-between p-4 hover:bg-slate-50 transition-colors cursor-pointer <%= isLast ? '' : 'border-b border-slate-50'%>"
+               data-status="<%= t.status%>" data-type="<%= t.type%>" data-id="<%= t._id%>"
+               data-created="<%= t.createdAt.toISOString()%>" data-expired="<%= t.expiredAt ? t.expiredAt.toISOString() : ''%>"
+               data-fee="<%= t.fee || 0%>" data-total="<%= totalKeseluruhan%>" data-qris="<%= t.qris_image || ''%>"
+               data-amount="<%= t.amount%>" data-method="<%= t.method || ''%>" data-account="<%= t.accountNumber || ''%>"
+               data-name="<%= t.accountName || ''%>" data-note="<%= t.adminNote || ''%>"
+               data-completed="<%= t.completedAt ? t.completedAt.toISOString() : ''%>"
+               onclick="window.location.hash = 'transactions-' + this.dataset.id">
+            <div class="flex items-center gap-4 flex-1 min-w-0">
+              <div class="w-10 h-10 rounded-[14px] flex items-center justify-center shrink-0 <%= isDeposit ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-finance-red'%>">
+                <i class="fas <%= isDeposit ? 'fa-arrow-down' : 'fa-arrow-up'%> text-sm"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="text-xs font-semibold text-slate-800 mb-0.5 truncate">#<%= t._id%></h4>
+                <p class="text-xs text-slate-500 font-medium"><%= formattedDate%></p>
+              </div>
+            </div>
+            <div class="text-right shrink-0 ml-3">
+              <span class="block text-xs font-semibold text-slate-800 mb-1.5"><%= isDeposit ? '+' : '-'%>Rp <%= nominalAsli.toLocaleString('id-ID')%></span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold <%= statusClass%>">
+                <%= t.status === 'paid' ? 'Berhasil' : t.status === 'success' ? 'Berhasil' : t.status === 'expired' ? 'Kedaluwarsa' : t.status === 'rejected' ? 'Ditolak' : 'Pending'%>
+              </span>
+            </div>
+          </div>
+        <% })%>
+        
+        <div id="emptyFilterState" class="hidden py-12 text-center flex flex-col items-center justify-center">
+          <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-3"><i class="fas fa-search text-2xl text-slate-300"></i></div>
+          <p class="text-sm font-semibold text-slate-600">Tidak ada transaksi</p>
+          <p class="text-xs text-slate-400 mt-1">Coba filter lainnya</p>
+        </div>
+      <% }%>
+    </div>
+  </div>
+</div>
+
+<div id="invoiceModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeInvoiceModal()"></div>
+  
+  <div class="relative bg-white rounded-[32px] shadow-xl overflow-hidden text-center w-full max-w-md transform transition-all scale-95 opacity-0 duration-200" id="invoiceModalContent">
+    
+    <div class="px-6 md:px-8 py-6 relative" style="background: var(--nav-grad);">
+      <button onclick="closeInvoiceModal()" class="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/40 transition-colors z-10">
+        <i class="fas fa-times text-xs"></i>
+      </button>
+      <h2 class="text-sm font-semibold text-white">Detail Pembayaran</h2>
+      <p class="text-xs font-medium text-white/80 mt-1" id="modalInvoiceId">ID Invoice: -</p>
+    </div>
+
+    <div class="p-6 md:p-8">
+      
+      <div class="bg-slate-50 border border-white rounded-[20px] p-4 mb-4 text-left">
+        <div class="flex justify-between items-center py-1.5 border-b border-slate-100">
+          <span class="text-xs font-semibold text-slate-500">Status</span>
+          <span id="modalStatus" class="text-xs font-semibold px-2 py-0.5 rounded-md">-</span>
+        </div>
+        <div class="flex justify-between items-center py-1.5 border-b border-slate-100">
+          <span class="text-xs font-semibold text-slate-500">Tanggal</span>
+          <span id="modalTanggal" class="text-xs font-semibold text-slate-700">-</span>
+        </div>
+        <div class="flex justify-between items-center py-1.5 border-b border-slate-100">
+          <span class="text-xs font-semibold text-slate-500">Tanggal Expired</span>
+          <span id="modalExpiredInfo" class="text-xs font-semibold text-slate-700">-</span>
+        </div>
+        <div class="flex justify-between items-center py-1.5 border-b border-slate-100">
+          <span class="text-xs font-semibold text-slate-500">Nominal</span>
+          <span id="modalNominal" class="text-xs font-semibold text-slate-700">Rp 0</span>
+        </div>
+        <div class="flex justify-between items-center py-1.5 border-b border-slate-100">
+          <span class="text-xs font-semibold text-slate-500">Biaya Admin</span>
+          <span id="modalFee" class="text-xs font-semibold text-slate-700">Rp 0</span>
+        </div>
+        <div class="flex justify-between items-center py-1.5 border-b border-slate-100">
+          <span class="text-xs font-semibold text-slate-500">Total Tagihan</span>
+          <span id="modalTotal" class="text-xs font-semibold text-slate-700">Rp 0</span>
+        </div>
+        <div class="flex justify-between items-center py-1.5">
+          <span class="text-xs font-semibold text-slate-500">Total Diterima</span>
+          <span id="modalDiterima" class="text-xs font-semibold text-slate-700">Rp 0</span>
+        </div>
+      </div>
+      
+      <div id="modalDynamicContent"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let countdownInterval;
+  let invoicePollInterval;
+  let currentInvoiceData = null;
+  let isFilterOpen = false;
+
+  function startInvoicePoll(ref) {
+    clearInterval(invoicePollInterval);
+    let tries = 0;
+    invoicePollInterval = setInterval(async () => {
+      tries += 1;
+      if (tries > 60) return clearInterval(invoicePollInterval);
+      try {
+        const res = await fetch('/api/invoice/' + encodeURIComponent(ref));
+        if (!res.ok) return;
+        const json = await apiJson(res);
+        if (!json.status || json.status === 'pending') return;
+        clearInterval(invoicePollInterval);
+        const el = document.querySelector(`.trx-item[data-id="${ref}"]`);
+        if (el) el.dataset.status = json.status;
+        if (currentInvoiceData && currentInvoiceData.reference === ref) {
+          currentInvoiceData.status = json.status;
+          openModalWithData(currentInvoiceData);
+        }
+        const ok = json.status === 'paid' || json.status === 'success';
+        showToast(ok ? 'Pembayaran berhasil, saldo sudah ditambahkan.' : 'Invoice sudah kedaluwarsa.', ok ? 'success' : 'error');
+        if (ok) setTimeout(() => window.location.reload(), 1500);
+      } catch (e) { /* jeda berikutnya mencoba lagi */ }
+    }, 5000);
+  }
+
+  function openModalWithData(invoiceData) {
+    currentInvoiceData = invoiceData;
+    document.getElementById('modalInvoiceId').innerText = `ID Invoice: ${invoiceData.reference}`;
+    document.getElementById('modalFee').innerText = `Rp ${parseInt(invoiceData.fee).toLocaleString('id-ID')}`;
+    document.getElementById('modalTotal').innerText = `Rp ${parseInt(invoiceData.total).toLocaleString('id-ID')}`;
+
+    const amountVal = parseInt(invoiceData.amount) || 0;
+    document.getElementById('modalNominal').innerText = `Rp ${amountVal.toLocaleString('id-ID')}`;
+    document.getElementById('modalDiterima').innerText = `Rp ${amountVal.toLocaleString('id-ID')}`;
+
+    const formatWibDate = value => {
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '-';
+      return new Intl.DateTimeFormat('id-ID', { timeZone:'Asia/Jakarta', weekday:'long', day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:false }).format(date).replace(/\./g, ':') + ' WIB';
+    };
+    document.getElementById('modalTanggal').innerText = formatWibDate(invoiceData.createdAt);
+    document.getElementById('modalExpiredInfo').innerText = formatWibDate(invoiceData.expiredAt);
+
+    let statusText = '';
+    let statusClass = '';
+    const st = invoiceData.status;
+    if (st === 'paid' || st === 'success') {
+      statusText = 'Berhasil';
+      statusClass = 'bg-emerald-50 text-emerald-600';
+    } else if (st === 'expired' || st === 'rejected') {
+      statusText = st === 'expired' ? 'Kedaluwarsa' : 'Ditolak';
+      statusClass = 'bg-rose-50 text-rose-600';
+    } else {
+      statusText = 'Pending';
+      statusClass = 'bg-amber-50 text-amber-600';
+    }
+    document.getElementById('modalStatus').innerHTML = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold ${statusClass}">${statusText}</span>`;
+
+    const dynamicContent = document.getElementById('modalDynamicContent');
+    clearInterval(countdownInterval);
+
+    if (invoiceData.status === 'pending' && invoiceData.method === 'emoney') {
+      const u = invoiceData.payUrl || '#';
+      dynamicContent.innerHTML = `
+        <div class="flex flex-col items-center">
+          <div class="w-16 h-16 rounded-[20px] bg-pastel-blue text-finance-blue flex items-center justify-center mb-3"><i class="fas fa-wallet text-2xl"></i></div>
+          <p class="text-xs font-semibold text-slate-800 mb-1">Bayar via ${invoiceData.productName || 'E-Wallet'}</p>
+          <p class="text-xs font-medium text-slate-500 mb-4 max-w-xs">Klik tombol di bawah untuk membuka halaman pembayaran. Saldo masuk otomatis setelah dibayar.</p>
+          <a href="${u}" target="_blank" rel="noopener" class="bg-finance-blue text-white font-bold text-sm px-6 py-3 rounded-[14px] hover:opacity-90 transition inline-flex items-center gap-2"><i class="fas fa-arrow-up-right-from-square"></i> Bayar Sekarang</a>
+        </div>`;
+    } else if (invoiceData.status === 'pending' && invoiceData.method === 'retail') {
+      const code = invoiceData.payCode || '-';
+      dynamicContent.innerHTML = `
+        <div class="flex flex-col items-center">
+          <div class="w-full bg-pastel-blue border border-finance-blue/20 rounded-[20px] p-4 mb-3 text-left">
+            <p class="text-[11px] font-semibold text-slate-500 mb-1">Kode Bayar ${invoiceData.productName || 'Retail'}</p>
+            <div class="flex items-center justify-between gap-2">
+              <span id="vaNumberText" class="text-lg font-extrabold tracking-wide text-finance-blue break-all">${code}</span>
+              <button type="button" onclick="copyVaNumber()" class="shrink-0 bg-finance-blue text-white text-[11px] font-bold px-3 py-1.5 rounded-[10px] hover:opacity-90 transition"><i class="fas fa-copy"></i> Salin</button>
+            </div>
+          </div>
+          <p class="text-xs font-semibold text-slate-800">Bayar di kasir ${invoiceData.productName || 'gerai'}</p>
+          <p class="text-xs font-medium text-slate-500 mt-1 max-w-xs">Tunjukkan/sebutkan kode bayar di atas ke kasir & bayar sesuai Total. Saldo masuk otomatis.</p>
+        </div>`;
+    } else if (invoiceData.status === 'pending' && invoiceData.method === 'va') {
+
+      const va = invoiceData.vaNumber || '-';
+      const bankName = invoiceData.vaBankName || 'Bank';
+      dynamicContent.innerHTML = `
+        <div class="flex flex-col items-center">
+          <div class="w-full bg-pastel-blue border border-finance-blue/20 rounded-[20px] p-4 mb-3 text-left">
+            <p class="text-[11px] font-semibold text-slate-500 mb-1">Virtual Account ${bankName}</p>
+            <div class="flex items-center justify-between gap-2">
+              <span id="vaNumberText" class="text-lg font-extrabold tracking-wide text-finance-blue break-all">${va}</span>
+              <button type="button" onclick="copyVaNumber()" class="shrink-0 bg-finance-blue text-white text-[11px] font-bold px-3 py-1.5 rounded-[10px] hover:opacity-90 transition"><i class="fas fa-copy"></i> Salin</button>
+            </div>
+          </div>
+          <p class="text-xs font-semibold text-slate-800">Bayar ke nomor Virtual Account di atas</p>
+          <p class="text-xs font-medium text-slate-500 mt-1 leading-relaxed max-w-xs">Buka m-banking/ATM ${bankName}, pilih bayar Virtual Account, masukkan nomor di atas, lalu bayar sesuai Total. Saldo masuk otomatis.</p>
+        </div>
+      `;
+    } else if (invoiceData.status === 'pending') {
+      dynamicContent.innerHTML = `
+        <div class="flex flex-col items-center">
+          <div class="inline-block p-3 bg-white border border-white rounded-[20px] shadow-sm mb-4">
+            <img src="${invoiceData.qris_image}" class="w-48 h-48 object-contain rounded-[16px]" alt="QRIS Deposit" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-48 h-48 flex items-center justify-center bg-slate-100 rounded-[16px] text-xs font-semibold text-slate-400\\'>QR tidak tersedia</div>';">
+          </div>
+          <p class="text-xs font-semibold text-slate-800">Scan QR Code di atas</p>
+          <p class="text-xs font-medium text-slate-500 mt-1 leading-relaxed max-w-xs">Gunakan aplikasi E-Wallet (DANA, OVO, GoPay) atau Mobile Banking Anda. Status otomatis diperbarui.</p>
+        </div>
+      `;
+    } else {
+      const paid = invoiceData.status === 'paid' || invoiceData.status === 'success';
+      dynamicContent.innerHTML = `
+        <div class="flex flex-col items-center py-1">
+          <div class="w-16 h-16 rounded-[20px] ${paid ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'} flex items-center justify-center mb-3"><i class="fas ${paid ? 'fa-circle-check' : 'fa-circle-xmark'} text-2xl"></i></div>
+          <p class="text-sm font-bold text-slate-800 mb-1">${paid ? 'Pembayaran berhasil' : 'Pembayaran tidak berhasil'}</p>
+          <p class="text-xs font-medium text-slate-500 max-w-xs">${paid ? 'Saldo sudah ditambahkan ke akun Anda.' : 'Invoice ini sudah kedaluwarsa. Buat invoice baru untuk mengisi saldo.'}</p>
+        </div>`;
+    }
+
+    if (invoiceData.status === 'pending') startInvoicePoll(invoiceData.reference);
+    else clearInterval(invoicePollInterval);
+
+    const modal = document.getElementById('invoiceModal');
+    const content = document.getElementById('invoiceModalContent');
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+      content.classList.remove('scale-95', 'opacity-0');
+      content.classList.add('scale-100', 'opacity-100');
+    }, 10);
+  }
+
+  function getInvoiceDataFromElement(el) {
+    return {
+      reference: el.dataset.id,
+      amount: el.dataset.amount,
+      fee: el.dataset.fee,
+      total: el.dataset.total,
+      qris_image: el.dataset.qris,
+      createdAt: el.dataset.created,
+      expiredAt: el.dataset.expired || null,
+      status: el.dataset.status
+    };
+  }
+
+  async function handleTransactionRouter() {
+    const hash = window.location.hash;
+    if (!hash.startsWith('#transactions-')) return;
+
+    const invoiceId = hash.replace('#transactions-', '');
+    const element = document.querySelector(`.trx-item[data-id="${invoiceId}"]`);
+    if (!element) {
+      closeInvoiceModal();
+      history.replaceState(null, null, window.location.pathname + window.location.search);
+      return;
+    }
+
+    let data = getInvoiceDataFromElement(element);
+
+    if (data.status === 'pending' && !data.qris_image) {
+      try {
+        const res = await fetch(`/api/invoice/${invoiceId}`);
+        if (res.ok) {
+          const json = await apiJson(res);
+          data.qris_image = json.qr_string || json.qris_image || '';
+          element.dataset.qris = data.qris_image;
+          if (json.total) element.dataset.total = json.total;
+          if (json.fee !== undefined) element.dataset.fee = json.fee;
+        }
+      } catch (e) {}
+    }
+
+    openModalWithData(data);
+  }
+
+  function closeInvoiceModal() {
+    if (window.location.hash.startsWith('#transactions-')) {
+      history.back();
+      setTimeout(() => {
+        if (window.location.hash.startsWith('#transactions-')) window.location.hash = '';
+      }, 100);
+    } else if (window.location.hash.startsWith('#invoice/')) {
+      history.back();
+    } else {
+      clearInterval(countdownInterval);
+      clearInterval(invoicePollInterval);
+      const modal = document.getElementById('invoiceModal');
+      const content = document.getElementById('invoiceModalContent');
+      content.classList.remove('scale-100', 'opacity-100');
+      content.classList.add('scale-95', 'opacity-0');
+      setTimeout(() => modal.classList.add('hidden'), 200);
+    }
+  }
+
+  function handleHashDeposit() {
+    const hash = window.location.hash;
+    if (hash.startsWith('#invoice/')) {
+
+    } else if (hash.startsWith('#transactions-')) {
+      handleTransactionRouter();
+    } else {
+      if (!document.getElementById('invoiceModal').classList.contains('hidden')) {
+        clearInterval(countdownInterval);
+        const modal = document.getElementById('invoiceModal');
+        const content = document.getElementById('invoiceModalContent');
+        content.classList.remove('scale-100', 'opacity-100');
+        content.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 200);
+      }
+    }
+  }
+
+  window.addEventListener('hashchange', handleHashDeposit);
+  window.addEventListener('popstate', handleHashDeposit);
+
+  window.toggleFilterMenu = () => {
+    isFilterOpen = !isFilterOpen;
+    document.getElementById('filterMenu').classList.toggle('hidden', !isFilterOpen);
+  };
+
+  document.addEventListener('click', function(e) {
+    const container = document.getElementById('filterDropdownContainer');
+    if (container && !container.contains(e.target) && isFilterOpen) {
+      toggleFilterMenu();
+    }
+  });
+
+  window.selectFilter = (val, text) => {
+    document.getElementById('activeFilterText').innerText = text;
+
+    document.querySelectorAll('.filter-option').forEach(btn => {
+      const match = btn.dataset.val === val;
+      const icon = btn.querySelector('.check-icon');
+      btn.classList.toggle('text-finance-blue', match);
+      btn.classList.toggle('bg-slate-100/70', match);
+      btn.classList.toggle('text-gray-600', !match);
+      icon.classList.toggle('hidden', !match);
+    });
+
+    const trxItems = document.querySelectorAll('.trx-item');
+    const emptyState = document.getElementById('emptyFilterState');
+    let visibleCount = 0;
+
+    trxItems.forEach(item => {
+      const status = item.dataset.status;
+      let show = false;
+
+      if (val === 'all') {
+        show = true;
+      } else if (val === 'paid' && (status === 'paid' || status === 'success')) {
+        show = true;
+      } else if (val === 'pending' && status === 'pending') {
+        show = true;
+      } else if (val === 'failed' && (status === 'expired' || status === 'rejected')) {
+        show = true;
+      }
+
+      item.style.display = show ? 'flex' : 'none';
+      if (show) visibleCount++;
+    });
+
+    if (emptyState) {
+      emptyState.classList.toggle('hidden', visibleCount > 0);
+    }
+
+    const emptyTrx = document.getElementById('emptyTrxState');
+    if (emptyTrx && visibleCount > 0) {
+      emptyTrx.classList.add('hidden');
+    } else if (emptyTrx && visibleCount === 0 && val === 'all') {
+      emptyTrx.classList.remove('hidden');
+    }
+
+    toggleFilterMenu();
+  };
+
+  const amountInput = document.getElementById('amountInput');
+  const rawAmountInput = document.getElementById('rawAmountInput');
+  const amountError = document.getElementById('amountError');
+
+  amountInput?.addEventListener('input', function() {
+    let raw = this.value.replace(/[^0-9]/g, '');
+    if (raw) {
+      this.value = parseInt(raw).toLocaleString('id-ID');
+      rawAmountInput.value = raw;
+    } else {
+      this.value = '';
+      rawAmountInput.value = '';
+    }
+    amountError.classList.add('hidden');
+  });
+
+  document.querySelectorAll('.quick-nominal-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const amount = this.getAttribute('data-amount');
+      rawAmountInput.value = amount;
+      amountInput.value = parseInt(amount).toLocaleString('id-ID');
+      amountError.classList.add('hidden');
+    });
+  });
+
+  const form = document.getElementById('invoiceForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const btnIcon = document.getElementById('btnIcon');
+  const btnText = document.getElementById('btnText');
+  const btnSpinner = document.getElementById('btnSpinner');
+
+  function setLoading(v) {
+    submitBtn.disabled = v;
+    btnIcon.classList.toggle('hidden', v);
+    btnSpinner.classList.toggle('hidden', !v);
+    btnText.textContent = v ? 'Memproses...' : 'Buat Invoice';
+  }
+
+  form?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const min = <%= minDeposit%>;
+    const raw = rawAmountInput.value;
+    const val = parseInt(raw);
+
+    amountError.classList.add('hidden');
+
+    if (isNaN(val) || val < min) {
+      amountError.textContent = `Nominal minimal Rp ${min.toLocaleString('id-ID')}`;
+      amountError.classList.remove('hidden');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const payload = { amount: raw };
+      const response = await fetch('/invoice/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await apiJson(response);
+
+      if (!response.ok) throw new Error(result.error || 'Gagal membuat invoice');
+
+      const invoiceData = {
+        reference: result.reference,
+        amount: raw,
+        fee: result.fee,
+        total: result.total,
+        method: result.method || 'qris',
+        qris_image: result.qris_image,
+        vaNumber: result.vaNumber,
+        vaBankName: result.vaBankName,
+        vaBankCode: result.vaBankCode,
+        payUrl: result.payUrl,
+        payCode: result.payCode,
+        productName: result.productName,
+        createdAt: result.createdAt,
+        expiredAt: result.expiredAt,
+        status: result.status || 'pending'
+      };
+
+      history.pushState(null, null, '#invoice/' + invoiceData.reference);
+      openModalWithData(invoiceData);
+
+      amountInput.value = '';
+      rawAmountInput.value = '';
+    } catch (error) {
+      amountError.textContent = error.message || 'Terjadi kesalahan.';
+      amountError.classList.remove('hidden');
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  window.addEventListener('pageshow', e => { if (e.persisted) setLoading(false); });
+</script>
+
+<%- include('../partials/footer')%>
