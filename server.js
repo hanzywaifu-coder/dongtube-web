@@ -582,6 +582,7 @@ async function finishLocalOrder(u, row) {
 app.get('/', (req, res) => res.render('pages/landing', { title: '', hideBottomNav: true }));
 app.get('/login', (req, res) => res.render('pages/login', { error: LOGIN_ERRORS[req.query.err] || '', success: req.query.ok || '', hideBottomNav: true }));
 app.get('/register', (req, res) => res.render('pages/register', { error: REGISTER_ERRORS[req.query.err] || '', hideBottomNav: true }));
+app.get('/terms', (req, res) => res.render('pages/terms', { title: 'Syarat & Ketentuan', hideBottomNav: true }));
 
 app.post('/register', async (req, res) => {
   if (!attemptOk('register:' + req.ip, 10, 5 * 60 * 1000)) return res.redirect('/register?err=terlalu-banyak');

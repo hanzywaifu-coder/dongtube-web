@@ -1,0 +1,24 @@
+<%- include('../partials/header', { title: 'Syarat & Ketentuan' })%>
+
+<div class="min-h-[78vh] px-6 py-10">
+  <div class="max-w-3xl mx-auto bg-white rounded-[2rem] shadow-soft-lg p-7 md:p-10 reveal">
+    <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-1.5">Syarat &amp; Ketentuan</h1>
+    <p class="text-[12px] text-slate-400 mb-7">Terakhir diperbarui: Oktober 2026. Dengan mendaftar dan memakai layanan ini, kamu dianggap menyetujui ketentuan berikut.</p>
+
+    <% [
+      ['1. Layanan', 'Layanan ini menyediakan sewa nomor virtual untuk menerima kode verifikasi (OTP) dari berbagai platform. Nomor disewa untuk jangka waktu tertentu dan tidak menjadi milik permanen pengguna.'],
+      ['2. Akun & Saldo', 'Akun dibuat dengan username, email, dan password. Saldo diisi lewat QRIS dan hanya dapat dipakai untuk transaksi di layanan ini; saldo tidak dapat ditarik kembali menjadi uang. Kamu bertanggung jawab menjaga keamanan akunmu sendiri.'],
+      ['3. Nomor & SMS', 'Setiap nomor memiliki masa sewa dan harga yang tertera jelas sebelum pesanan dibuat. SMS yang diterima hanya untuk verifikasi akun yang kamu daftarkan sendiri. Penggunaan nomor untuk penipuan, penyalahgunaan, atau aktivitas ilegal lain dilarang dan berakibat penghentian akun.'],
+      ['4. Refund Otomatis', 'Jika nomor tidak menerima SMS apa pun sampai masa sewa habis, saldo otomatis dikembalikan oleh sistem. SMS yang sudah masuk dianggap pesanan selesai.'],
+      ['5. Perubahan Harga & Ketersediaan', 'Harga dan ketersediaan nomor mengikuti penyedia dan dapat berubah sewaktu-waktu. Harga yang berlaku adalah yang tampil saat kamu mengonfirmasi pesanan.'],
+      ['6. Dukungan & Perubahan', 'Bantuan tersedia lewat kanal resmi yang tertera di situs ini. Ketentuan dapat berubah sewaktu-waktu tanpa pemberitahuan; versi terbaru selalu ada di halaman ini.'],
+    ].forEach(([judul, isi]) => { %>
+      <div class="mb-5">
+        <h2 class="text-[15px] font-extrabold ink mb-1.5"><%= judul %></h2>
+        <p class="text-[12.5px] leading-relaxed" style="color:var(--text-2)"><%= isi %></p>
+      </div>
+    <% }) %>
+  </div>
+</div>
+
+<%- include('../partials/footer')%>
